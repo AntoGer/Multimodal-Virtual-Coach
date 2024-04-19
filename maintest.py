@@ -16,7 +16,7 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 def print_result(result: PoseLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     print('pose landmarker result: {}'.format(result))
 
-model_file = open("/content/drive/My Drive/Colab Notebooks/pose_landmarker_heavy.task", "rb")
+model_file = open('pose_landmarker_lite.task', "rb")
 model_data = model_file.read()
 model_file.close()
     
@@ -45,13 +45,13 @@ with PoseLandmarker.create_from_options(options) as landmarker:
         # Convert the frame received from OpenCV to a MediaPipe’s Image object.
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
 
-        out = timestamp_ms = (cv2.getTickCount() / cv2.getTickFrequency()) * 1000
+        timestamp_ms = (cv2.getTickCount() / cv2.getTickFrequency()) * 1000
 
         # Send live image data to perform pose landmarking.
         # The results are accessible via the `result_callback` provided in
         # the `PoseLandmarkerOptions` object.
         # The pose landmarker must be created with the live stream mode.
-        landmarker.detect_async(mp_image, timestamp_ms)
+        out = landmarker.detect_async(mp_image, timestamp_ms)
         cv2.imshow("img", cv2.cvtColor(out, cv2.COLOR_RGB2BGR))
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
