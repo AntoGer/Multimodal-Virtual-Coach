@@ -19,7 +19,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
       
         # Make detection
         results = pose.process(image)
-        
+        #hdshgsjg
         #print(type(results.pose_landmarks), results.pose_landmarks)
 
         # Recolor back to BGR
