@@ -30,6 +30,7 @@ counter_lenti = 0
 counter_veloci = 0
 f_direzione = None 
 t_tot = 0
+
 #ridimensionamento frame e finestra video
 larghezza_nuova = 1000 #900 
 altezza_nuova = 750 #650
