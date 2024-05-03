@@ -103,35 +103,52 @@ class Squat:
 
         return image
     
-    def back(self):
-        #prende posizione x e y dei 3 joints di dx
-        spalla_sx_schiena = [landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_SHOULDER].x, landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y]
-        anca_sx_schiena = [landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_HIP].x, landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_HIP].y]
-        ginocchio_sx_schiena = [landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_KNEE].x, landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_KNEE].y]
-        angle_schiena = calculate_angles(spalla_sx_schiena, anca_sx_schiena, ginocchio_sx_schiena)
-        f_landmark_schiena = True
-        #mostra l'angolo calcolato
-        cv2.putText(image_schiena, str(int(angle_schiena)), 
-                    tuple(np.multiply(anca_sx_schiena,[l_image_schiena, a_image_schiena]).astype(int)), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 2 ,(255,144,30), 2, cv2.LINE_AA
-                        )
-        #schiena sotto i 50° è troppo inclinata
-        #mostro i landmark della camera laterale
-        self.mp_drawing.draw_landmarks(image_schiena, results_schiena.pose_landmarks, self.mp_pose.POSE_CONNECTIONS,
-                            self.mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2), 
-                            self.mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2) 
-                            ) 
-        #Mostra le visibility di spalla, anca e ginocchio sx nel frame laterale
-        cv2.putText(image_schiena, "spalla sx "+ str(int(landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_SHOULDER].visibility*100)),(int(l_image_schiena*0.55),int(a_image_schiena*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
-        cv2.putText(image_schiena, "anca sx "+ str(int(landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_HIP].visibility*100)),(int(l_image_schiena*0.55),int(a_image_schiena*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
-        cv2.putText(image_schiena, "ginocchio sx "+ str(int(landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image_schiena*0.55),int(a_image_schiena*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
+    def back(self, image, angle, anca_sx, landmarks, l_image, a_image):
+        try:        
+            f_landmark_schiena = True
+            #mostra l'angolo calcolato
+            cv2.putText(image, str(int(angle)), 
+                        tuple(np.multiply(anca_sx,[l_image, a_image]).astype(int)), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 2 ,(255,144,30), 2, cv2.LINE_AA
+                            )
+            
+            if (self.last_direction == None or self.last_direction == 'down' and angle < 130) or (self.last_direction == 'up' and angle < 45):
+                    cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.75), int(a_image*0.25)), (0, 0, 255), -1)
+                    cv2.putText(image, "SCHIENA TROPPO INCLINATA", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
 
+            #Mostra le visibility di spalla, anca e ginocchio sx nel frame laterale
+            cv2.putText(image, "spalla sx "+ str(int(landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER].visibility*100)),(int(l_image*0.55),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
+            cv2.putText(image, "anca sx "+ str(int(landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].visibility*100)),(int(l_image*0.55),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
+            cv2.putText(image, "ginocchio sx "+ str(int(landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image*0.55),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
+        
+        except:
+            pass
+
+        return image
+    
 class PostureDetector:
 
     def __init__(self):
         self.mp_pose = mp.solutions.pose
         self.mp_drawing = mp.solutions.drawing_utils
         self.pose = self.mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking_confidence=0.3)
+        self.knee_point_sx = None
+        self.knee_point_dx = None
+
+    def calculate_angles_back(self, landmarks):
+        
+        #prende posizione x e y dei 3 joints di dx
+        spalla_sx = [landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER].x, landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y]
+        anca_sx = [landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].x, landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].y]
+        ginocchio_sx = [landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].x, landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].y]
+
+        radiants = np.arctan2(ginocchio_sx[1]-anca_sx[1], ginocchio_sx[0]-anca_sx[0]) - np.arctan2(spalla_sx[1]-anca_sx[1], spalla_sx[0]-anca_sx[0])
+        angle = np.abs(radiants *180.0/np.pi)
+
+        self.hip_point=anca_sx
+
+        return angle, anca_sx
+
 
     def calculate_angles(self, landmarks):
         """metodo che calcola angolo gamba"""
@@ -156,6 +173,9 @@ class PostureDetector:
         radiants_sx = np.arctan2(ankle_sx[1]-knee_sx[1], ankle_sx[0]-knee_sx[0]) - np.arctan2(hip_sx[1]-knee_sx[1], hip_sx[0]-knee_sx[0])
         angle_sx = np.abs(radiants_sx *180.0/np.pi)
 
+        self.knee_point_dx = knee_dx
+        self.knee_point_sx = knee_sx
+
         return angle_sx, angle_dx 
     
     def detect_posture(self, frame):
@@ -176,6 +196,16 @@ class PostureDetector:
                                         ) 
         except:
             pass
+        return frame
+    
+    def show_angles(self, frame, angle, point, l_image, a_image):
+        
+        #mostra l'angolo calcolato
+        cv2.putText(frame, str(int(angle)), 
+                    tuple(np.multiply(point,[l_image, a_image]).astype(int)), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 2 ,(255,144,30), 2, cv2.LINE_AA
+                        )
+        
         return frame
     
     def check_landmarks(self, image, a_image, l_image, landmarks):
@@ -213,7 +243,7 @@ class UIManager:
         self.cap = cv2.VideoCapture(sel_camera)
         self.a_image = self.cap.get(4)
         self.l_image = self.cap.get(3)
-        self.mp_drawing = mp.solutions.drawing_utils
+        #self.mp_drawing = mp.solutions.drawing_utils
 
     def display_frame(self, frame):
         img_nuova = cv2.resize(frame, (900, 650))
@@ -253,7 +283,6 @@ def main():
             ret, frame = ui_manager_front.cap.read()
             ret_2, frame_2 = ui_manager_2.cap.read()
             
-            
             landmarks, results = posture_detector.detect_posture(frame)
             frame = posture_detector.check_landmarks(frame, ui_manager_front.a_image, ui_manager_front.l_image,landmarks)
             frame = posture_detector.draw_landmarks(frame,results.pose_landmarks)
@@ -264,7 +293,18 @@ def main():
             
             asx,adx = posture_detector.calculate_angles(landmarks)
 
+            frame = posture_detector.show_angles(frame, asx, posture_detector.knee_point_sx, ui_manager_front.l_image, ui_manager_front.a_image)
+            frame = posture_detector.show_angles(frame, adx, posture_detector.knee_point_dx, ui_manager_front.l_image, ui_manager_front.a_image)
+
             frame = squat_counter.correct_execution(frame, asx, adx, ui_manager_front.l_image, ui_manager_front.a_image)
+            
+            absx, hip_sx = posture_detector1.calculate_angles_back(landmarks_2)
+
+
+
+            frame = posture_detector.show_angles(frame, absx, hip_sx, ui_manager_2.l_image, ui_manager_2.a_image)
+
+            frame = squat_counter.back(frame, absx, hip_sx, landmarks_2, results_2, ui_manager_2.l_image, ui_manager_2.a_image)
 
             # Esegui il conteggio degli squat e visualizza il frame
             # Implementa la logica di conteggio e visualizzazione qui
