@@ -3,7 +3,7 @@ import mediapipe as mp
 import numpy as np
 from datetime import datetime
 #per speech recognition offline, non ancora implementato
-import vosk 
+#import vosk 
 
 def calculate_angles(a, b, c):
     a = np.array(a) #anca
@@ -22,7 +22,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 #cattura video webcam e camera 
-cap = cv2.VideoCapture(0) 
+cap = cv2.VideoCapture(1) #0 o 1 
 #cap = cv2.VideoCapture("http://192.168.178.44:8080/video") # wifi casa :"http://192.168.178.44:8080/video"   hotspot telefono :"http://192.168.84.218:8080/video"
 #contatore squat e flag per vedere se in salita o in discesa
 counter = -1
@@ -32,7 +32,9 @@ f_direzione = None
 #Pose in input ha static_image_mode=False perchè input è video stream e non immagine 
 #min_detection_confidence è la soglia sopra la quale identifica correttamente un nuovo indivuduo
 #min_tracking_confidence è la soglia minima sopra la quale un individuo gia identificato rimane tracciato
+#complexity = 1 full
 with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking_confidence=0.3) as pose:
+    
     while cap.isOpened():
         ret, frame = cap.read()
         
@@ -138,7 +140,7 @@ with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking
                 elif f_direzione==None: 
                     f_direzione="down"
                     counter = 0
-            elif angle_dx < 60 and angle_sx < 60 and f_direzione=="down":  
+            elif angle_dx < 80 and angle_sx < 80 and f_direzione=="down":  
                 f_direzione = "up" 
                 istante_inizio_salita = datetime.now() 
                 f_salita_veloce = False 
