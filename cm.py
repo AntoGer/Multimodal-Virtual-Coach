@@ -105,7 +105,6 @@ class Squat:
     
     def back(self, image, angle, anca_sx, landmarks, l_image, a_image):
         try:        
-            f_landmark_schiena = True
             #mostra l'angolo calcolato
             cv2.putText(image, str(int(angle)), 
                         tuple(np.multiply(anca_sx,[l_image, a_image]).astype(int)), 
@@ -268,7 +267,6 @@ class UIManager:
   
     def release_capture(self):
         self.cap.release()
-        cv2.destroyAllWindows()
 
 def main():
     posture_detector = PostureDetector()
@@ -300,24 +298,10 @@ def main():
             
             absx, hip_sx = posture_detector1.calculate_angles_back(landmarks_2)
 
-
-
             frame = posture_detector.show_angles(frame, absx, hip_sx, ui_manager_2.l_image, ui_manager_2.a_image)
 
-            frame = squat_counter.back(frame, absx, hip_sx, landmarks_2, results_2, ui_manager_2.l_image, ui_manager_2.a_image)
+            frame = squat_counter.back(frame, absx, hip_sx, landmarks_2, ui_manager_2.l_image, ui_manager_2.a_image)
 
-            # Esegui il conteggio degli squat e visualizza il frame
-            # Implementa la logica di conteggio e visualizzazione qui
-
-            #ui_manager_front.display_double_frame(frame, frame_2)
-
-            larghezza_nuova = 900
-            altezza_nuova = 650
-            #nn = cv2.resize(frame_2,(ui_manager_2.l_image, ui_manager_2.a_image))
-            #img_composta = np.concatenate((frame, nn), axis=1)
-            #img_nuova = cv2.resize(img_composta, (larghezza_nuova, altezza_nuova))
-            #cv2.rotate(frame_2, cv2.ROTATE_90_CLOCKWISE)
-            #cv2.resize(frame_2, (ui_manager_2.l_image,ui_manager_2.a_image))
             merged_frame = cv2.hconcat([frame, frame_2])
 
             if not ui_manager_front.display_frame(merged_frame):
@@ -330,3 +314,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    cv2.destroyAllWindows()
