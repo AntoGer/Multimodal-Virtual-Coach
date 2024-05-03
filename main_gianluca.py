@@ -30,6 +30,9 @@ counter_lenti = 0
 counter_veloci = 0
 f_direzione = None 
 t_tot = 0
+#ridimensionamento frame e finestra video
+larghezza_nuova = 1000 #900 
+altezza_nuova = 750 #650
 #Pose in input ha static_image_mode=False perchè input è video stream e non immagine 
 #min_detection_confidence è la soglia sopra la quale identifica correttamente un nuovo indivuduo
 #min_tracking_confidence è la soglia minima sopra la quale un individuo gia identificato rimane tracciato
@@ -52,9 +55,6 @@ with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking
             #altezza e larghezza del frame (480 x 640 la webcam)
             a_image = int(cap.get(4))#480 len(image) 
             l_image = int(cap.get(3))#640 len(image[0])
-            #ridimensionamento frame e finestra video
-            larghezza_nuova = 900
-            altezza_nuova = 650
 
             #INIZIO PARTE SCHIENA LATERALE--------------------------------------------------------------------
             ret, frame_schiena = cap_schiena.read() 
@@ -72,23 +72,19 @@ with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking
             #extract landmarks 
             try:
                 landmarks_schiena = results_schiena.pose_landmarks.landmark
-                #qua dovresti mette i controlli di visibilità
-                f=False 
-                if landmarks_schiena[mp_pose.PoseLandmark.LEFT_SHOULDER].visibility <= 0.8:
+                #se qualche joints non è ben visibile allora lo segnalo e vado al prossimo frame 
+                if landmarks_schiena[mp_pose.PoseLandmark.LEFT_SHOULDER].visibility <= 0.8 or landmarks_schiena[mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8 or landmarks_schiena[mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8: 
                     #rettangolo rosso che cattura l'attenzione 
-                    cv2.rectangle(image_schiena, (0,0), (int(l_image_schiena*0.55), int(a_image_schiena*0.125)), (0,0,255), -1)
-                    cv2.putText(image_schiena, "Non vedo spalla sx",(int(l_image_schiena*0.015), int(a_image_schiena*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
-                    f=True 
-                elif landmarks_schiena[mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8:
-                    cv2.rectangle(image_schiena, (0,0), (int(l_image_schiena*0.55), int(a_image_schiena*0.125)), (0,0,255), -1)
-                    cv2.putText(image_schiena, "Non vedo anca sx",(int(l_image_schiena*0.015), int(a_image_schiena*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
-                    f=True
-                elif landmarks_schiena[mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8:#rimetti a 0.8 poi
-                    cv2.rectangle(image_schiena, (0,0), (int(l_image_schiena*0.55), int(a_image_schiena*0.125)), (0,0,255), -1)
-                    cv2.putText(image_schiena, "Non vedo ginocchio sx",(int(l_image_schiena*0.015), int(a_image_schiena*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
-                    f=True 
-                if f==True: 
-                    #img_nuova = cv2.resize(image, (larghezza_nuova, altezza_nuova))
+                    cv2.rectangle(image_schiena, (0,0), (int(l_image_schiena*0.55), int(a_image_schiena*0.125)), (0,0,255), -1) 
+                    #controlli di visibilità dei joints cruciali
+                    if landmarks_schiena[mp_pose.PoseLandmark.LEFT_SHOULDER].visibility <= 0.8:
+                        cv2.putText(image_schiena, "Non vedo spalla sx",(int(l_image_schiena*0.015), int(a_image_schiena*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                    elif landmarks_schiena[mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8:
+                        cv2.putText(image_schiena, "Non vedo anca sx",(int(l_image_schiena*0.015), int(a_image_schiena*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
+                    elif landmarks_schiena[mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8:
+                        cv2.putText(image_schiena, "Non vedo ginocchio sx",(int(l_image_schiena*0.015), int(a_image_schiena*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
+            
+                    #rettangolo rosso che cattura l'attenzione 
                     img_composta = np.concatenate((image, cv2.resize(image_schiena,(l_image, a_image))), axis=1) 
                     img_nuova = cv2.resize(img_composta, (larghezza_nuova, altezza_nuova))
                     #mostro tempo trascorso in alto al centro 
@@ -128,37 +124,25 @@ with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking
 
             try:
                 landmarks = results.pose_landmarks.landmark
-                #controllo che bacino, ginocchio e cavoglia siano visibili 
-                #90% è troppo alta e non si attiva quasi mai, 80% giusto compromesso
-                f=False 
-                if landmarks[mp_pose.PoseLandmark.RIGHT_HIP].visibility <= 0.8:
-                    #rettangolo rosso che cattura l'attenzione 
-                    cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1)
-                    cv2.putText(image, "Non vedo bacino dx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
-                    f=True 
-                elif landmarks[mp_pose.PoseLandmark.RIGHT_KNEE].visibility <= 0.8:
-                    cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1)
-                    cv2.putText(image, "Non vedo ginocchio dx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
-                    f=True
-                elif landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE].visibility <= 0.8:
-                    cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1)
-                    cv2.putText(image, "Non vedo caviglia dx ",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
-                    f=True
-                if landmarks[mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8:
-                    #rettangolo rosso che cattura l'attenzione 
-                    cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1)
-                    cv2.putText(image, "Non vedo bacino sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
-                    f=True 
-                elif landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8:
-                    cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1)
-                    cv2.putText(image, "Non vedo ginocchio sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
-                    f=True
-                elif landmarks[mp_pose.PoseLandmark.LEFT_ANKLE].visibility <= 0.8:
-                    cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1)
-                    cv2.putText(image, "Non vedo caviglia sx ",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
-                    f=True
                 #se no vede bene qualche landmark fondamentale     
-                if f==True: 
+                if landmarks[mp_pose.PoseLandmark.RIGHT_HIP].visibility <= 0.8 or landmarks[mp_pose.PoseLandmark.RIGHT_KNEE].visibility <= 0.8 or landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE].visibility <= 0.8 or landmarks[mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8 or landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8 or landmarks[mp_pose.PoseLandmark.LEFT_ANKLE].visibility <= 0.8:#f == True: 
+                    #rettangolo rosso che cattura l'attenzione 
+                    cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1)
+                    #controllo che bacino, ginocchio e caviglia dx e sx siano ben visibili 
+                    #90% è troppo alta e non si attiva quasi mai, 80% giusto compromesso
+                    if landmarks[mp_pose.PoseLandmark.RIGHT_HIP].visibility <= 0.8:
+                        cv2.putText(image, "Non vedo bacino dx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                    elif landmarks[mp_pose.PoseLandmark.RIGHT_KNEE].visibility <= 0.8:
+                        cv2.putText(image, "Non vedo ginocchio dx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
+                    elif landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE].visibility <= 0.8:
+                        cv2.putText(image, "Non vedo caviglia dx ",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                    elif landmarks[mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8:
+                        cv2.putText(image, "Non vedo bacino sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                    elif landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8:
+                        cv2.putText(image, "Non vedo ginocchio sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
+                    elif landmarks[mp_pose.PoseLandmark.LEFT_ANKLE].visibility <= 0.8:
+                        cv2.putText(image, "Non vedo caviglia sx ",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                
                     img_composta = np.concatenate((image, cv2.resize(image_schiena,(l_image, a_image))), axis=1) 
                     img_nuova = cv2.resize(img_composta, (larghezza_nuova, altezza_nuova))
                      #mostro tempo trascorso in alto al centro 
@@ -247,17 +231,15 @@ with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking
                     #controllo anomalie
                     if f_discesa_veloce or f_salita_veloce or f_discesa_lenta or f_salita_lenta or f_schiena_troppo_inclinata:
                         #rettangolo rosso se sceso o salgo troppo veloce o se scendo o salgo troppo lentamente
+                        if f_discesa_veloce or f_salita_veloce or f_discesa_lenta or f_salita_lenta:
+                            cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.25)), (0, 0, 255), -1) 
                         if f_discesa_veloce:
-                            cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.25)), (0, 0, 255), -1)
                             cv2.putText(image, "RALLENTA DISCESA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
                         elif f_salita_veloce:
-                            cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.25)), (0, 0, 255), -1)
                             cv2.putText(image, "RALLENTA SALITA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
                         elif f_discesa_lenta:
-                            cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.25)), (0, 0, 255), -1)
                             cv2.putText(image, "VELOCIZZA DISCESA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
                         elif f_salita_lenta:
-                            cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.25)), (0, 0, 255), -1)
                             cv2.putText(image, "VELOCIZZA SALITA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
                         if f_schiena_troppo_inclinata: 
                             cv2.rectangle(image_schiena, (0,int(a_image_schiena*0.125)+1), (int(l_image_schiena*0.75), int(a_image_schiena*0.25)), (0, 0, 255), -1)
@@ -273,8 +255,7 @@ with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking
                             cv2.rectangle(image_schiena, (0,int(a_image_schiena*0.125)+1), (int(l_image_schiena*0.5), int(a_image*0.25)), (0, 255, 0), -1)
                             cv2.putText(image_schiena, "OK", (int(l_image_schiena*0.015), int(a_image_schiena*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
 
-                #mostra in alto a sinistra il contatore degli squat in un 
-                #rettangolo verde 
+                #mostra in alto a sinistra il contatore degli squat in un rettangolo verde 
                 cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,255,0), -1)
                 cv2.putText(image, "Squat :" + str(counter), (int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0))
 
@@ -288,12 +269,11 @@ with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking
                 cv2.putText(image, "ginocchio sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image*0.55),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
                 cv2.putText(image, "caviglia sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_ANKLE].visibility*100)),(int(l_image*0.55),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
                 
-                t_tot = round((datetime.now() - istante_inizio).total_seconds(),1)       
+                t_tot = round((datetime.now() - istante_inizio).total_seconds(), 1)       
             except:
                 #eccezione quando il modello non vede alcun landmark
                 pass
 
-            
             #combina i due frame, uno affianco all'altro 
             img_composta = np.concatenate((image, cv2.resize(image_schiena,(l_image, a_image))), axis=1) 
             img_nuova = cv2.resize(img_composta, (larghezza_nuova, altezza_nuova))
@@ -304,7 +284,6 @@ with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking
 
             #crea popup con il video
             cv2.imshow("Assistente Fitness", img_nuova) 
-            #cv2.resizeWindow("Assistente Fitness", larghezza_nuova, altezza_nuova)
             cv2.resizeWindow("Assistente Fitness", larghezza_nuova, altezza_nuova)
             if cv2.waitKey(10) & 0xFF == ord('q'):
                 break
