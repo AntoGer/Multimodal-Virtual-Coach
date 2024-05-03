@@ -89,7 +89,7 @@ class Squat:
                 else:
                     cv2.putText(image, "VELOCIZZA SALITA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
             else:
-                #rettangolo verde se esecuzione ok
+                #rettangolo verde se esecuzione
                 cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.25)), (0, 255, 0), -1)
                 cv2.putText(image, "OK", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))        
 
@@ -102,6 +102,29 @@ class Squat:
             pass
 
         return image
+    
+    def back(self):
+        #prende posizione x e y dei 3 joints di dx
+        spalla_sx_schiena = [landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_SHOULDER].x, landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y]
+        anca_sx_schiena = [landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_HIP].x, landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_HIP].y]
+        ginocchio_sx_schiena = [landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_KNEE].x, landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_KNEE].y]
+        angle_schiena = calculate_angles(spalla_sx_schiena, anca_sx_schiena, ginocchio_sx_schiena)
+        f_landmark_schiena = True
+        #mostra l'angolo calcolato
+        cv2.putText(image_schiena, str(int(angle_schiena)), 
+                    tuple(np.multiply(anca_sx_schiena,[l_image_schiena, a_image_schiena]).astype(int)), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 2 ,(255,144,30), 2, cv2.LINE_AA
+                        )
+        #schiena sotto i 50° è troppo inclinata
+        #mostro i landmark della camera laterale
+        self.mp_drawing.draw_landmarks(image_schiena, results_schiena.pose_landmarks, self.mp_pose.POSE_CONNECTIONS,
+                            self.mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2), 
+                            self.mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2) 
+                            ) 
+        #Mostra le visibility di spalla, anca e ginocchio sx nel frame laterale
+        cv2.putText(image_schiena, "spalla sx "+ str(int(landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_SHOULDER].visibility*100)),(int(l_image_schiena*0.55),int(a_image_schiena*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
+        cv2.putText(image_schiena, "anca sx "+ str(int(landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_HIP].visibility*100)),(int(l_image_schiena*0.55),int(a_image_schiena*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
+        cv2.putText(image_schiena, "ginocchio sx "+ str(int(landmarks_schiena[self.mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image_schiena*0.55),int(a_image_schiena*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
 
 class PostureDetector:
 
@@ -199,7 +222,20 @@ class UIManager:
         if cv2.waitKey(10) & 0xFF == ord('q'):
             return False
         return True
-
+    
+    def display_double_frame(self, frame, frame_2):
+        larghezza_nuova = 900
+        altezza_nuova = 650
+        #img_nuova = cv2.resize(image, (larghezza_nuova, altezza_nuova))
+        img_composta = np.concatenate((cv2.resize(frame, (self.l_image, self.a_image)), cv2.resize(frame_2,(self.l_image, self.a_image))), axis=1) 
+        img_nuova = cv2.resize(img_composta, (larghezza_nuova, altezza_nuova))
+        #crea popup con il video
+        cv2.imshow("Assistente Fitness", img_nuova) 
+        cv2.resizeWindow("Assistente Fitness", larghezza_nuova, altezza_nuova)
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            return False
+        return True
+  
     def release_capture(self):
         self.cap.release()
         cv2.destroyAllWindows()
@@ -207,33 +243,50 @@ class UIManager:
 def main():
     posture_detector = PostureDetector()
     squat_counter = Squat(6)
-    ui_manager = UIManager(1)
+    ui_manager_front = UIManager(0)
+    ui_manager_2 = UIManager(1)
 
-    while ui_manager.cap.isOpened():
+    while ui_manager_front.cap.isOpened():
 
         try:
-            ret, frame = ui_manager.cap.read()
-
+            ret, frame = ui_manager_front.cap.read()
+            ret_2, frame_2 = ui_manager_2.cap.read()
+            
+            """
             landmarks, results = posture_detector.detect_posture(frame)
-            frame = posture_detector.check_landmarks(frame, ui_manager.a_image, ui_manager.l_image,landmarks)
+            frame = posture_detector.check_landmarks(frame, ui_manager_front.a_image, ui_manager_front.l_image,landmarks)
             frame = posture_detector.draw_landmarks(frame,results.pose_landmarks)
 
-            asx,adx = posture_detector.calculate_angles(landmarks)
+            landmarks, results = posture_detector.detect_posture(frame_2)
+            frame_2 = posture_detector.check_landmarks(frame_2, ui_manager_front.a_image, ui_manager_front.l_image,landmarks)
+            frame_2 = posture_detector.draw_landmarks(frame_2,results.pose_landmarks)
+            """
 
-            frame = squat_counter.correct_execution(frame, asx, adx, ui_manager.l_image, ui_manager.a_image)
+            #asx,adx = posture_detector.calculate_angles(landmarks)
+
+            #frame = squat_counter.correct_execution(frame, asx, adx, ui_manager_front.l_image, ui_manager_front.a_image)
 
             # Esegui il conteggio degli squat e visualizza il frame
             # Implementa la logica di conteggio e visualizzazione qui
 
-            ui_manager.display_frame(frame)
+            #ui_manager_front.display_double_frame(frame, frame_2)
 
-            if not ui_manager.display_frame(frame):
+            larghezza_nuova = 900
+            altezza_nuova = 650
+            #nn = cv2.resize(frame_2,(ui_manager_2.l_image, ui_manager_2.a_image))
+            #img_composta = np.concatenate((frame, nn), axis=1) 
+            #img_nuova = cv2.resize(img_composta, (larghezza_nuova, altezza_nuova))
+            #frame_2 = cv2.rotate(frame_2, cv2.ROTATE_90_CLOCKWISE)
+            #frame_2 = cv2.resize(frame_2, (ui_manager_2.l_image,ui_manager_2.a_image))
+            merged_frame = cv2.hconcat([frame, frame_2])
+
+            if not ui_manager_front.display_frame(merged_frame):
                 break
 
         except:
             pass
 
-    ui_manager.release_capture()
+    ui_manager_front.release_capture()
 
 if __name__ == "__main__":
     main()
