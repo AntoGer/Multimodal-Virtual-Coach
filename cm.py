@@ -242,6 +242,7 @@ class UIManager:
 
 def main():
     posture_detector = PostureDetector()
+    posture_detector1 = PostureDetector()
     squat_counter = Squat(6)
     ui_manager_front = UIManager(0)
     ui_manager_2 = UIManager(1)
@@ -252,19 +253,18 @@ def main():
             ret, frame = ui_manager_front.cap.read()
             ret_2, frame_2 = ui_manager_2.cap.read()
             
-            """
+            
             landmarks, results = posture_detector.detect_posture(frame)
             frame = posture_detector.check_landmarks(frame, ui_manager_front.a_image, ui_manager_front.l_image,landmarks)
             frame = posture_detector.draw_landmarks(frame,results.pose_landmarks)
 
-            landmarks, results = posture_detector.detect_posture(frame_2)
-            frame_2 = posture_detector.check_landmarks(frame_2, ui_manager_front.a_image, ui_manager_front.l_image,landmarks)
-            frame_2 = posture_detector.draw_landmarks(frame_2,results.pose_landmarks)
-            """
+            landmarks_2, results_2 = posture_detector1.detect_posture(frame_2)
+            frame_2 = posture_detector1.check_landmarks(frame_2, ui_manager_2.a_image, ui_manager_2.l_image,landmarks_2)
+            frame_2 = posture_detector1.draw_landmarks(frame_2,results_2.pose_landmarks)
+            
+            asx,adx = posture_detector.calculate_angles(landmarks)
 
-            #asx,adx = posture_detector.calculate_angles(landmarks)
-
-            #frame = squat_counter.correct_execution(frame, asx, adx, ui_manager_front.l_image, ui_manager_front.a_image)
+            frame = squat_counter.correct_execution(frame, asx, adx, ui_manager_front.l_image, ui_manager_front.a_image)
 
             # Esegui il conteggio degli squat e visualizza il frame
             # Implementa la logica di conteggio e visualizzazione qui
@@ -274,10 +274,10 @@ def main():
             larghezza_nuova = 900
             altezza_nuova = 650
             #nn = cv2.resize(frame_2,(ui_manager_2.l_image, ui_manager_2.a_image))
-            #img_composta = np.concatenate((frame, nn), axis=1) 
+            #img_composta = np.concatenate((frame, nn), axis=1)
             #img_nuova = cv2.resize(img_composta, (larghezza_nuova, altezza_nuova))
-            #frame_2 = cv2.rotate(frame_2, cv2.ROTATE_90_CLOCKWISE)
-            #frame_2 = cv2.resize(frame_2, (ui_manager_2.l_image,ui_manager_2.a_image))
+            #cv2.rotate(frame_2, cv2.ROTATE_90_CLOCKWISE)
+            #cv2.resize(frame_2, (ui_manager_2.l_image,ui_manager_2.a_image))
             merged_frame = cv2.hconcat([frame, frame_2])
 
             if not ui_manager_front.display_frame(merged_frame):

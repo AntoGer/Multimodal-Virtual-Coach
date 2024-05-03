@@ -274,11 +274,6 @@ with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5, min_tracking
         except:
             pass
         
-        
-        if f_direzione!= dire:
-            dire=f_direzione
-            print(f_direzione)
-            print(counter_squat)
             
         # Render detections
         mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
