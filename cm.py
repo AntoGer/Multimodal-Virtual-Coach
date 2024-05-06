@@ -3,6 +3,40 @@ import numpy as np
 import cv2
 import mediapipe as mp
 
+import threading
+import speech_recognition as sr 
+
+def check_voice_command(recognizer, audio):
+    #bisogna creare un dizionario di parole chiavi che interrompono 
+    #il programma se pronunciate
+    try:
+        # Riconosce il discorso
+        text = recognizer.recognize_google(audio, language='it-IT')
+        if "ferma" in text.lower() or "stop" in text.lower():
+            print("Esecuzione interrotta dall'input vocale.")
+            # Se la parola chiave è rilevata, imposta una variabile globale per interrompere il ciclo
+            global stop_vocal_command 
+            stop_vocal_command = True
+    except sr.UnknownValueError:
+        pass  # Ignora l'errore se il discorso non è chiaro
+    except sr.RequestError as e:
+        print(f"Errore nella richiesta al servizio di riconoscimento vocale: {e}")
+
+def draw_rectangle(image, pp , pa , color, thickness, r):
+    x, y = pp[0], pp[1]
+    w, h = pa[0], pa[1]
+
+    # Disegna i quattro angoli smussati
+    cv2.circle(image, (x+r, y+r), r, color, thickness)
+    cv2.circle(image, (x+w-r, y+r), r, color, thickness)
+    cv2.circle(image, (x+r, y+h-r), r, color, thickness)
+    cv2.circle(image, (x+w-r, y+h-r), r, color , thickness)
+
+    # Disegna i quattro lati del rettangolo
+    cv2.rectangle(image, (x+r, y), (x+w-r, y+h), color , thickness)
+    cv2.rectangle(image, (x, y+r), (x+w, y+h-r), color , thickness)
+
+
 class Squat:
     def __init__(self, reps):
         self.starting_instant = datetime.now()
@@ -88,52 +122,52 @@ class Squat:
 
         if self.fast_d or self.fast_up or self.slow_d or self.slow_up:
             #rettangolo rosso se sceso o salgo troppo veloce o se scendo o salgo troppo lentamente
-            cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.25)), (0, 0, 255), -1)
+            draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,0,255), -1 , 20)
             if self.fast_d:
-                cv2.putText(image, "RALLENTA DISCESA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
+                cv2.putText(image, "RALLENTA DISCESA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             elif self.fast_up:
-                cv2.putText(image, "RALLENTA SALITA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
+                cv2.putText(image, "RALLENTA SALITA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0),2, 16)
             elif self.slow_d:
-                cv2.putText(image, "VELOCIZZA DISCESA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
+                cv2.putText(image, "VELOCIZZA DISCESA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0),2, 16)
             else:
-                cv2.putText(image, "VELOCIZZA SALITA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
+                cv2.putText(image, "VELOCIZZA SALITA!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0),2, 16)
         else:
             #rettangolo verde se esecuzione
-            cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.25)), (0, 255, 0), -1)
-            cv2.putText(image, "OK", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))        
+            draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
+            cv2.putText(image, "OK", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)    
 
         #mostra in alto a sinistra il contatore degli squat in un 
         #rettangolo verde 
-        cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,255,0), -1)
-        cv2.putText(image, "Squat :" + str(self.count), (int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0))
+        draw_rectangle(image, (int(l_image*0.005), int(a_image*0.005)), (int(l_image*0.55), int(a_image*0.125)), (0,255,0), -1 , 20)
+        cv2.putText(image, "Squat :" + str(self.count), (int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, 16)
         
 
         #Mostra le visibility di anca, ginocchio e caviglia dx nel frame
-        cv2.putText(image, "anca dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_HIP].visibility*100)),(int(l_image*0.055),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, cv2.LINE_AA)
-        cv2.putText(image, "ginocchio dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_KNEE].visibility*100)),(int(l_image*0.055),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, cv2.LINE_AA)
-        cv2.putText(image, "caviglia dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE].visibility*100)),(int(l_image*0.055),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, cv2.LINE_AA)
+        cv2.putText(image, "anca dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_HIP].visibility*100)),(int(l_image*0.055),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, 16)
+        cv2.putText(image, "ginocchio dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_KNEE].visibility*100)),(int(l_image*0.055),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, 16)
+        cv2.putText(image, "caviglia dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE].visibility*100)),(int(l_image*0.055),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, 16)
         
         #Mostra le visibility di anca, ginocchio e caviglia dx nel frame
-        cv2.putText(image, "anca sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_HIP].visibility*100)),(int(l_image*0.55),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
-        cv2.putText(image, "ginocchio sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image*0.55),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
-        cv2.putText(image, "caviglia sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_ANKLE].visibility*100)),(int(l_image*0.55),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
+        cv2.putText(image, "anca sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_HIP].visibility*100)),(int(l_image*0.55),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
+        cv2.putText(image, "ginocchio sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image*0.55),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
+        cv2.putText(image, "caviglia sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_ANKLE].visibility*100)),(int(l_image*0.55),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
         
         #il secondo argomento calcola il tempo passato dall'inizio del 1 squat
         return image, round((datetime.now() - self.starting_instant).total_seconds(),1) 
     
-    
+
     def back(self, image, angle_back, landmarks, l_image, a_image, mp_pose):
         ANGLE_BACK_UP = 130
         ANGLE_BACK_DOWN = 30
 
         if (self.current_position == "up" and  angle_back < ANGLE_BACK_UP) or (self.current_position == "down" and  angle_back < ANGLE_BACK_DOWN):
-            cv2.rectangle(image, (0,int(a_image*0.125)+1), (int(l_image*0.75), int(a_image*0.25)), (0, 0, 255), -1)
-            cv2.putText(image, "SCHIENA TROPPO INCLINATA", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
+            draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.75), int(a_image*0.125)), (0,0,255), -1 , 20)
+            cv2.putText(image, "SCHIENA TROPPO INCLINATA", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
 
         #Mostra le visibility di spalla, anca e ginocchio sx nel frame laterale
-        cv2.putText(image, "spalla sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER].visibility*100)),(int(l_image*0.55),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
-        cv2.putText(image, "anca sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_HIP].visibility*100)),(int(l_image*0.55),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
-        cv2.putText(image, "ginocchio sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image*0.55),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, cv2.LINE_AA)
+        cv2.putText(image, "spalla sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER].visibility*100)),(int(l_image*0.55),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
+        cv2.putText(image, "anca sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_HIP].visibility*100)),(int(l_image*0.55),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
+        cv2.putText(image, "ginocchio sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image*0.55),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
     
         return image
     
@@ -222,7 +256,7 @@ class PostureDetector:
         #mostra l'angolo calcolato
         cv2.putText(frame, str(int(angle)), 
                     tuple(np.multiply(point,[l_image, a_image]).astype(int)), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 2 ,(255,144,30), 2, cv2.LINE_AA
+                        cv2.FONT_HERSHEY_SIMPLEX, 2 ,(255,144,30), 2, 16
                         )
         
         return frame
@@ -238,45 +272,60 @@ class PostureDetector:
             if landmarks[self.mp_pose.PoseLandmark.RIGHT_HIP].visibility <= 0.8 or landmarks[self.mp_pose.PoseLandmark.RIGHT_KNEE].visibility <= 0.8 or landmarks[self.mp_pose.PoseLandmark.RIGHT_ANKLE].visibility <= 0.8 or landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8 or landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8 or landmarks[self.mp_pose.PoseLandmark.LEFT_ANKLE].visibility <= 0.8:#f == True: 
                 f_errore = True
                 #rettangolo rosso che cattura l'attenzione 
-                cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1)
+                draw_rectangle(image, (int(l_image*0.005), int(a_image*0.005)), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1 , 20)
                 #controllo che bacino, ginocchio e caviglia dx e sx siano ben visibili 
                 #90% è troppo alta e non si attiva quasi mai, 80% giusto compromesso
                 if landmarks[self.mp_pose.PoseLandmark.RIGHT_HIP].visibility <= 0.8:
-                    cv2.putText(image, "Non vedo bacino dx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                    cv2.putText(image, "Non vedo bacino dx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, 16)
                 elif landmarks[self.mp_pose.PoseLandmark.RIGHT_KNEE].visibility <= 0.8:
-                    cv2.putText(image, "Non vedo ginocchio dx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
+                    cv2.putText(image, "Non vedo ginocchio dx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.9 ,(0,0,0), 2, 16)
                 elif landmarks[self.mp_pose.PoseLandmark.RIGHT_ANKLE].visibility <= 0.8:
-                    cv2.putText(image, "Non vedo caviglia dx ",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                    cv2.putText(image, "Non vedo caviglia dx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, 16)
                 elif landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8:
-                    cv2.putText(image, "Non vedo bacino sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                    cv2.putText(image, "Non vedo bacino sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, 16)
                 elif landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8:
-                    cv2.putText(image, "Non vedo ginocchio sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
+                    cv2.putText(image, "Non vedo ginocchio sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.9 ,(0,0,0), 2, 16)
                 elif landmarks[self.mp_pose.PoseLandmark.LEFT_ANKLE].visibility <= 0.8:
-                    cv2.putText(image, "Non vedo caviglia sx ",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                    cv2.putText(image, "Non vedo caviglia sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, 16)
 
         else:
             if landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER].visibility <= 0.8 or landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8 or landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8: 
                     f_errore = True
-                    #rettangolo rosso che cattura l'attenzione 
-                    cv2.rectangle(image, (0,0), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1) 
+                    #rettangolo rosso che cattura l'attenzione  
+                    draw_rectangle(image, (int(l_image*0.005), int(a_image*0.005)), (int(l_image*0.55), int(a_image*0.125)), (0,0,255), -1 , 20)
                     #controlli di visibilità dei joints cruciali
                     if landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER].visibility <= 0.8:
-                        cv2.putText(image, "Non vedo spalla sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, cv2.LINE_AA)
+                        cv2.putText(image, "Non vedo spalla sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, 16)
                     elif landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].visibility <= 0.8:
-                        cv2.putText(image, "Non vedo anca sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
+                        cv2.putText(image, "Non vedo anca sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,0,0), 2, 16)
                     elif landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].visibility <= 0.8:
-                        cv2.putText(image, "Non vedo ginocchio sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.8 ,(0,0,0), 2, cv2.LINE_AA)
+                        cv2.putText(image, "Non vedo ginocchio sx",(int(l_image*0.015), int(a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 0.9 ,(0,0,0), 2, 16)
 
         return image, f_errore
 
 class UIManager:
     def __init__(self,sel_camera):
-        self.cap = cv2.VideoCapture(sel_camera)
-        self.a_image = int(self.cap.get(4))
-        self.l_image = int(self.cap.get(3)) 
-        self.larghezza_nuova = 900
-        self.altezza_nuova = 650
-        #self.mp_drawing = mp.solutions.drawing_utils
+        #False quando mostro la schermata finale con riassunto degli
+        #squat fatti
+        if sel_camera != "no":
+            self.cap = cv2.VideoCapture(sel_camera)
+            self.a_image = int(self.cap.get(4))
+            self.l_image = int(self.cap.get(3)) 
+        self.larghezza_nuova = 1300
+        self.altezza_nuova = 850
+
+    def display_final_frame(self, n_squat):
+        if n_squat > 0:
+            img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,255,0), dtype =np.uint8)
+            cv2.putText(img_finale, "Complimenti, hai completato "+str(n_squat)+" squat !", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
+        else: 
+            img_finale = np.full((self.altezza_nuova, self.altezza_nuova, 3),(0,0,255), dtype =np.uint8)
+            cv2.putText(img_finale, "Hai completato 0 squat !", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)
+        while True:
+            cv2.imshow("Assistente Fitness", img_finale)
+            cv2.resizeWindow("Assistente Fitness", self.altezza_nuova, self.larghezza_nuova)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break 
 
     def display_frame(self, frame):
         img_nuova = cv2.resize(frame, (self.larghezza_nuova, self.altezza_nuova))
@@ -306,7 +355,12 @@ if __name__ == "__main__":
     ui_manager_front = UIManager(0)
     ui_manager_1 = UIManager(1)
 
-    while ui_manager_front.cap.isOpened():
+    stop_vocal_command = False 
+    recognizer = sr.Recognizer() 
+    microphone = sr.Microphone() 
+    stop_listening = recognizer.listen_in_background(microphone, check_voice_command)
+
+    while ui_manager_front.cap.isOpened() and not stop_vocal_command:
 
         ret, frame = ui_manager_front.cap.read()
         ret_1, frame_1 = ui_manager_1.cap.read()
@@ -364,15 +418,23 @@ if __name__ == "__main__":
         frame_1 = squat_counter.back(frame_1, absx, landmarks_1, ui_manager_1.l_image, ui_manager_1.a_image, posture_detector.mp_pose)
         
         merged_frame = cv2.hconcat([frame, frame_1])
-
-        cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.01)) , (int(ui_manager_front.larghezza_nuova*0.6), int(ui_manager_front.altezza_nuova*0.1)), (255, 255, 255), -1)
-        cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.48), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0))
+        
+        print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
+        cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+        #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+        #draw_rectangle(merged_frame, (585, 4), (780, 85), (255, 255, 255), -1 , 20)
+        cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
     
 
         if not ui_manager_front.display_frame(merged_frame):
             break
-
-
+        if tempo_sec>0:
+            print(tempo_sec) 
+    stop_listening(wait_for_stop = False)
     ui_manager_front.release_capture()
     ui_manager_1.release_capture() 
+
+    ui_manager_final = UIManager("no")  
+    ui_manager_final.display_final_frame(squat_counter.count)
+    
     cv2.destroyAllWindows()
