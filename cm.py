@@ -5,22 +5,45 @@ import mediapipe as mp
 
 import threading
 import speech_recognition as sr 
+import vosk
+import pyaudio 
+import json 
 
+#VOSK 
+def voice_recognition_thread():
+    l_grammar = ["stop", "ferma", "termina"] 
+    recognizer = vosk.KaldiRecognizer(model, 16000)
+    #print("Ascoltando...")
+    while not stop_event.is_set():
+        data = stream.read(4000, exception_on_overflow=False)
+        if recognizer.AcceptWaveform(data):
+            result = recognizer.Result()
+            result_dict = json.loads(result)
+            #print(result_dict['text'])
+            # Verifica se la parola chiave è stata pronunciata
+            for parola in l_grammar:
+                if parola in result_dict['text'].lower():
+                    #print("Esecuzione interrotta dall'input vocale.")
+                    stop_event.set()  
+#GOOGLE API
 def check_voice_command(recognizer, audio):
-    #bisogna creare un dizionario di parole chiavi che interrompono 
+    #bisogna creare un dizionario di parole chiavi che interrompono
+    l_grammar = ["stop", "ferma", "termina"]  
     #il programma se pronunciate
     try:
         # Riconosce il discorso
         text = recognizer.recognize_google(audio, language='it-IT')
-        if "ferma" in text.lower() or "stop" in text.lower():
-            print("Esecuzione interrotta dall'input vocale.")
-            # Se la parola chiave è rilevata, imposta una variabile globale per interrompere il ciclo
-            global stop_vocal_command 
-            stop_vocal_command = True
+        for parola in l_grammar:
+            if parola in text.lower():
+                #print("Esecuzione interrotta dall'input vocale.")
+                # Se la parola chiave è rilevata, imposta una variabile globale per interrompere il ciclo
+                global stop_vocal_command 
+                stop_vocal_command = True
     except sr.UnknownValueError:
         pass  # Ignora l'errore se il discorso non è chiaro
     except sr.RequestError as e:
-        print(f"Errore nella richiesta al servizio di riconoscimento vocale: {e}")
+        #print(f"Errore nella richiesta al servizio di riconoscimento vocale: {e}")
+        pass 
 
 def draw_rectangle(image, pp , pa , color, thickness, r):
     x, y = pp[0], pp[1]
@@ -103,7 +126,7 @@ class Squat:
                 self.current_direction = "down"
                 #perchè si inizia quando si sta su e si scende, e non quando si instanzia 
                 #l'oggetto squat
-                self.starting_instant = max(self.starting_instant,datetime.now()) 
+                self.starting_instant = max(self.starting_instant, datetime.now()) 
                 self.count = 0
         elif angle_dx < MIN_ANGLE and angle_sx < MIN_ANGLE and self.current_direction == "down":  
             #serve per capire quale angolo della schiena controllare
@@ -314,13 +337,13 @@ class UIManager:
         self.larghezza_nuova = 1300
         self.altezza_nuova = 850
 
-    def display_final_frame(self, n_squat):
+    def display_final_frame(self, n_squat, tempo):
         if n_squat > 0:
             img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,255,0), dtype =np.uint8)
-            cv2.putText(img_finale, "Complimenti, hai completato "+str(n_squat)+" squat !", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
+            cv2.putText(img_finale, "Hai completato "+str(n_squat)+" squat in "+ str(tempo)+ " secondi!", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
         else: 
             img_finale = np.full((self.altezza_nuova, self.altezza_nuova, 3),(0,0,255), dtype =np.uint8)
-            cv2.putText(img_finale, "Hai completato 0 squat !", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)
+            cv2.putText(img_finale, "Hai completato 0 squat in "+ str(tempo)+ " secondi!", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)
         while True:
             cv2.imshow("Assistente Fitness", img_finale)
             cv2.resizeWindow("Assistente Fitness", self.altezza_nuova, self.larghezza_nuova)
@@ -355,12 +378,29 @@ if __name__ == "__main__":
     ui_manager_front = UIManager(0)
     ui_manager_1 = UIManager(1)
 
+    #GOOGLE API 
+    #serve per capire quando terminare il programma
     stop_vocal_command = False 
     recognizer = sr.Recognizer() 
     microphone = sr.Microphone() 
     stop_listening = recognizer.listen_in_background(microphone, check_voice_command)
+    
 
-    while ui_manager_front.cap.isOpened() and not stop_vocal_command:
+    #VOSK
+    """model_path = "vosk-model-small-it-0.22"
+    # Carica il modello
+    model = vosk.Model(model_path)
+    # Imposta il microfono
+    p = pyaudio.PyAudio()
+    stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
+    stream.start_stream()
+    # Evento per segnalare quando la parola chiave è stata riconosciuta
+    stop_event = threading.Event()
+    voice_thread = threading.Thread(target=voice_recognition_thread)
+    voice_thread.start() """
+
+    tempo_sec = 0
+    while ui_manager_front.cap.isOpened() and not stop_vocal_command :#not stop_event.is_set()(=> VOSK):#not stop_vocal_command(=> GOOGLE)
 
         ret, frame = ui_manager_front.cap.read()
         ret_1, frame_1 = ui_manager_1.cap.read()
@@ -371,6 +411,11 @@ if __name__ == "__main__":
         except:
             #se non vede nessuno lancia l'eccezione
             merged_frame = cv2.hconcat([frame, frame_1])
+            if tempo_sec > 0:
+                #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
+                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             if not ui_manager_front.display_frame(merged_frame):
                 break
             continue 
@@ -379,6 +424,11 @@ if __name__ == "__main__":
         frame, errore = posture_detector.check_landmarks(frame, ui_manager_front.l_image, ui_manager_front.a_image, landmarks, 0)
         if errore:
             merged_frame = cv2.hconcat([frame, frame_1])
+            if tempo_sec > 0:
+                #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
+                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             if not ui_manager_front.display_frame(merged_frame):
                 break 
             continue
@@ -392,6 +442,11 @@ if __name__ == "__main__":
         except :
             #se non vede nessuno lancia l'eccezione
             merged_frame = cv2.hconcat([frame, frame_1])
+            if tempo_sec > 0:
+                #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
+                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             if not ui_manager_front.display_frame(merged_frame):
                 break
             continue 
@@ -400,6 +455,11 @@ if __name__ == "__main__":
         frame_1, errore_1 = posture_detector1.check_landmarks(frame_1, ui_manager_1.l_image, ui_manager_1.a_image, landmarks_1, 1)
         if errore_1:
             merged_frame = cv2.hconcat([frame, frame_1])
+            if tempo_sec > 0:
+                #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
+                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             if not ui_manager_front.display_frame(merged_frame):
                 break 
             continue
@@ -418,23 +478,26 @@ if __name__ == "__main__":
         frame_1 = squat_counter.back(frame_1, absx, landmarks_1, ui_manager_1.l_image, ui_manager_1.a_image, posture_detector.mp_pose)
         
         merged_frame = cv2.hconcat([frame, frame_1])
-        
-        print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
+        #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
         cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
         #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-        #draw_rectangle(merged_frame, (585, 4), (780, 85), (255, 255, 255), -1 , 20)
         cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-    
 
         if not ui_manager_front.display_frame(merged_frame):
             break
-        if tempo_sec>0:
-            print(tempo_sec) 
+
+    #GOOGLE API         
     stop_listening(wait_for_stop = False)
+
+    #VOSK
+    """stream.stop_stream()
+    stream.close() 
+    p.terminate()"""
+
     ui_manager_front.release_capture()
     ui_manager_1.release_capture() 
 
     ui_manager_final = UIManager("no")  
-    ui_manager_final.display_final_frame(squat_counter.count)
+    ui_manager_final.display_final_frame(squat_counter.count, tempo_sec)
     
     cv2.destroyAllWindows()
