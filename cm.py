@@ -45,6 +45,48 @@ def check_voice_command(recognizer, audio):
         #print(f"Errore nella richiesta al servizio di riconoscimento vocale: {e}")
         pass 
 
+class Static:
+    def __init__(self, sec):
+        self.starting_instant = -10000000000
+        self.seconds = 0
+        self.sec = sec
+        self.position = False
+
+    def wallsit(self, image, angle_dx, angle_sx, angle_back, a_image, l_image, mp_pose):
+
+        MAX_ANGLE = 100
+        MIN_ANGLE = 80
+
+        #contatore degli squat e controllo sulle velocità di esecuzione
+        #160 è troppo 
+        if angle_dx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > 85 and angle_back < 95  and not self.position:
+            #per vedere la velocità del movimento in secondi
+            self.starting_instant = datetime.now() 
+            self.seconds = self.starting_instant.timestamp() + self.sec
+            self.position = True
+            draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
+            cv2.putText(image, "Esercizio iniziato!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+        elif angle_dx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > 85 and angle_back < 95  and  self.position:
+            draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
+            cv2.putText(image, "Esercizio on esecuzione!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+            if datetime.now() == self.seconds:
+                draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
+                cv2.putText(image, "Esercizio finito!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16) 
+
+
+        #Mostra le visibility di anca, ginocchio e caviglia dx nel frame
+        cv2.putText(image, "anca dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_HIP].visibility*100)),(int(l_image*0.055),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, 16)
+        cv2.putText(image, "ginocchio dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_KNEE].visibility*100)),(int(l_image*0.055),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, 16)
+        cv2.putText(image, "caviglia dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE].visibility*100)),(int(l_image*0.055),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, 16)
+        
+        #Mostra le visibility di anca, ginocchio e caviglia dx nel frame
+        cv2.putText(image, "anca sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_HIP].visibility*100)),(int(l_image*0.55),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
+        cv2.putText(image, "ginocchio sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image*0.55),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
+        cv2.putText(image, "caviglia sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_ANKLE].visibility*100)),(int(l_image*0.55),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
+        
+        #il secondo argomento calcola il tempo passato dall'inizio del 1 squat
+        return image, round((datetime.now() - self.starting_instant).total_seconds(),1) 
+
 def draw_rectangle(image, pp , pa , color, thickness, r):
     x, y = pp[0], pp[1]
     w, h = pa[0], pa[1]
@@ -57,8 +99,7 @@ def draw_rectangle(image, pp , pa , color, thickness, r):
 
     # Disegna i quattro lati del rettangolo
     cv2.rectangle(image, (x+r, y), (x+w-r, y+h), color , thickness)
-    cv2.rectangle(image, (x, y+r), (x+w, y+h-r), color , thickness)
-
+    cv2.rectangle(image, (x, y+r), (x+w, y+h-r), color , thickness)    
 
 class Squat:
     def __init__(self, reps):
@@ -74,35 +115,26 @@ class Squat:
         self.istante_inizio_discesa = datetime.now() 
         self.istante_inizio_salita = datetime.now()
 
-    def exsplosive(self):
+    def squat(self, image, angle_sx, angle_dx, l_image, a_image, mp_pose, excercise=None):
         """
-        discesa 3 sec, salita più veloce possibile
-        """
-        TIME_SLOW = 5
-        TIME_FAST = 1.5
-        TIME_FASTD = 0.5
-        MAX_ANGLE = 140
-        MIN_ANGLE = 135
-    
-    def endurance(self):
-        """
-        discesa e salita 4 sec
-        """
-        TIME_SLOW = 5
-        TIME_FAST = 1.5
-        TIME_FASTD = 0.5
-        MAX_ANGLE = 140
-        MIN_ANGLE = 135
-    
-    def correct_execution(self, image, angle_sx, angle_dx, l_image, a_image, mp_pose):
-        """
-        apprendimento esercizio da parte dell'utente
+        controlla esecuzione squat con diverse modalità: apprendimento, endurance e explosive.
         """
         TIME_SLOW = 5
         TIME_FAST = 1.5
         TIME_FASTD = 0.5
         MAX_ANGLE = 140
         MIN_ANGLE = 60 #135
+
+        if excercise == "E":
+            TIME_SLOW = 6
+            TIME_FAST = 4
+            TIME_FASTD = 4
+        
+        elif excercise == "EX":
+            TIME_SLOW = 2
+            TIME_FAST = 0
+            TIME_FASTD = 4
+            MIN_ANGLE = 85
 
         #contatore degli squat e controllo sulle velocità di esecuzione
         #160 è troppo 
@@ -372,11 +404,14 @@ class UIManager:
         self.cap.release()
 
 if __name__ == "__main__":
+
     posture_detector = PostureDetector()
     posture_detector1 = PostureDetector()
     squat_counter = Squat(6)
     ui_manager_front = UIManager(0)
     ui_manager_1 = UIManager(1)
+
+    wallsit = Static(10) 
 
     #GOOGLE API 
     #serve per capire quando terminare il programma
@@ -470,19 +505,21 @@ if __name__ == "__main__":
         asx, adx = posture_detector.calculate_angles(landmarks)
         frame = posture_detector.show_angles(frame, asx, posture_detector.knee_point_sx, ui_manager_front.l_image, ui_manager_front.a_image)
         frame = posture_detector.show_angles(frame, adx, posture_detector.knee_point_dx, ui_manager_front.l_image, ui_manager_front.a_image)
-        frame, tempo_sec = squat_counter.correct_execution(frame, asx, adx, ui_manager_front.l_image, ui_manager_front.a_image, posture_detector.mp_pose)
+        #frame, tempo_sec = squat_counter.squat(frame, asx, adx, ui_manager_front.l_image, ui_manager_front.a_image, posture_detector.mp_pose)
         
         #calcola angoli, li mostra e controllo agolazione schiena (camera laterale)
         absx, hip_sx = posture_detector1.calculate_angles_back(landmarks_1)
         frame_1 = posture_detector.show_angles(frame_1, absx, hip_sx, ui_manager_1.l_image, ui_manager_1.a_image)
-        frame_1 = squat_counter.back(frame_1, absx, landmarks_1, ui_manager_1.l_image, ui_manager_1.a_image, posture_detector.mp_pose)
         
+        #frame_1 = squat_counter.back(frame_1, absx, landmarks_1, ui_manager_1.l_image, ui_manager_1.a_image, posture_detector.mp_pose)
+        frame, tempo_sec = wallsit.wallsit(frame, adx, asx, absx, ui_manager_front.a_image, ui_manager_front.l_image, posture_detector.mp_pose)
+
         merged_frame = cv2.hconcat([frame, frame_1])
         #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
-        cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+        cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
         #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
         cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-
+   
         if not ui_manager_front.display_frame(merged_frame):
             break
 
