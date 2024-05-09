@@ -5,26 +5,9 @@ import mediapipe as mp
 
 import threading
 import speech_recognition as sr 
-import vosk
 import pyaudio 
 import json 
 
-#VOSK 
-def voice_recognition_thread():
-    l_grammar = ["stop", "ferma", "termina"] 
-    recognizer = vosk.KaldiRecognizer(model, 16000)
-    #print("Ascoltando...")
-    while not stop_event.is_set():
-        data = stream.read(4000, exception_on_overflow=False)
-        if recognizer.AcceptWaveform(data):
-            result = recognizer.Result()
-            result_dict = json.loads(result)
-            #print(result_dict['text'])
-            # Verifica se la parola chiave è stata pronunciata
-            for parola in l_grammar:
-                if parola in result_dict['text'].lower():
-                    #print("Esecuzione interrotta dall'input vocale.")
-                    stop_event.set()  
 #GOOGLE API
 def check_voice_command(recognizer, audio):
     #bisogna creare un dizionario di parole chiavi che interrompono
@@ -420,22 +403,8 @@ if __name__ == "__main__":
     microphone = sr.Microphone() 
     stop_listening = recognizer.listen_in_background(microphone, check_voice_command)
     
-
-    #VOSK
-    """model_path = "vosk-model-small-it-0.22"
-    # Carica il modello
-    model = vosk.Model(model_path)
-    # Imposta il microfono
-    p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
-    stream.start_stream()
-    # Evento per segnalare quando la parola chiave è stata riconosciuta
-    stop_event = threading.Event()
-    voice_thread = threading.Thread(target=voice_recognition_thread)
-    voice_thread.start() """
-
     tempo_sec = 0
-    while ui_manager_front.cap.isOpened() and not stop_vocal_command :#not stop_event.is_set()(=> VOSK):#not stop_vocal_command(=> GOOGLE)
+    while ui_manager_front.cap.isOpened() and not stop_vocal_command :
 
         ret, frame = ui_manager_front.cap.read()
         ret_1, frame_1 = ui_manager_1.cap.read()
@@ -525,11 +494,6 @@ if __name__ == "__main__":
 
     #GOOGLE API         
     stop_listening(wait_for_stop = False)
-
-    #VOSK
-    """stream.stop_stream()
-    stream.close() 
-    p.terminate()"""
 
     ui_manager_front.release_capture()
     ui_manager_1.release_capture() 
