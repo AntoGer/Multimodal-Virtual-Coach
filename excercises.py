@@ -5,18 +5,19 @@ import utility
 
 class Static:
     def __init__(self, sec):
-        self.starting_instant = -10000000000
+        self.starting_instant = None
         self.seconds = 0
         self.sec = sec
         self.position = False
 
-    def wallsit(self, image, angle_dx, angle_sx, angle_back, a_image, l_image, mp_pose):
+    def wallsit(self, image, angle_dx, angle_sx, angle_back, a_image, l_image, mp_pose, landmarks):
 
         MAX_ANGLE = 100
         MIN_ANGLE = 80
 
         #contatore degli squat e controllo sulle velocità di esecuzione
-        #160 è troppo 
+        #160 è troppo  
+
         if angle_dx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > 85 and angle_back < 95  and not self.position:
             #per vedere la velocità del movimento in secondi
             self.starting_instant = datetime.now() 
@@ -26,8 +27,8 @@ class Static:
             cv2.putText(image, "Esercizio iniziato!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
         elif angle_dx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > 85 and angle_back < 95  and  self.position:
             utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
-            cv2.putText(image, "Esercizio on esecuzione!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if datetime.now() == self.seconds:
+            cv2.putText(image, "Esercizio in esecuzione!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+            if datetime.now() >= self.seconds:
                 utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
                 cv2.putText(image, "Esercizio finito!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16) 
 
@@ -59,7 +60,7 @@ class Squat:
         self.istante_inizio_discesa = datetime.now() 
         self.istante_inizio_salita = datetime.now()
 
-    def squat(self, image, angle_sx, angle_dx, l_image, a_image, mp_pose, excercise=None):
+    def squat(self, image, angle_sx, angle_dx, l_image, a_image, mp_pose, landmarks, excercise=None):
         """
         controlla esecuzione squat con diverse modalità: apprendimento, endurance e explosive.
         """
