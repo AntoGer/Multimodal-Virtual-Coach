@@ -1,12 +1,14 @@
 import cv2
-import datetime
+from datetime import datetime
+import datetime as dt
 
 import utility
 
 class Static:
     def __init__(self, sec):
-        self.starting_instant = None
-        self.seconds = 0
+        #self.starting_instant = None
+        #self.seconds = 0
+        self.ending_instant = None
         self.sec = sec
         self.position = False
 
@@ -21,14 +23,14 @@ class Static:
         if angle_dx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > 85 and angle_back < 95  and not self.position:
             #per vedere la velocità del movimento in secondi
             self.starting_instant = datetime.now() 
-            self.seconds = self.starting_instant.timestamp() + self.sec
+            self.ending_instant = self.starting_instant + dt.timedelta(seconds = self.sec)
             self.position = True
             utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
             cv2.putText(image, "Esercizio iniziato!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
         elif angle_dx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > 85 and angle_back < 95  and  self.position:
             utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
             cv2.putText(image, "Esercizio in esecuzione!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if datetime.now() >= self.seconds:
+            if datetime.now() >= self.ending_instant:#self.starting_instant + self.seconds:
                 utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
                 cv2.putText(image, "Esercizio finito!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16) 
 
@@ -43,8 +45,10 @@ class Static:
         cv2.putText(image, "ginocchio sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_KNEE].visibility*100)),(int(l_image*0.55),int(a_image*0.917)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
         cv2.putText(image, "caviglia sx "+ str(int(landmarks[mp_pose.PoseLandmark.LEFT_ANKLE].visibility*100)),(int(l_image*0.55),int(a_image*0.98)), cv2.FONT_HERSHEY_SIMPLEX, 1 ,(0,140,255), 2, 16)
         
+        if self.position:
         #il secondo argomento calcola il tempo passato dall'inizio del 1 squat
-        return image, round((datetime.now() - self.starting_instant).total_seconds(),1)    
+            return image, round((datetime.now() - self.starting_instant).total_seconds(),1)  
+        return image, 0  
 
 class Squat:
     def __init__(self, reps):
