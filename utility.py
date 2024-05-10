@@ -236,15 +236,13 @@ class UIManager:
     def release_capture(self):
         self.cap.release()
 
-import utility
-
 if __name__ == "__main__": 
 
-    ui_manager_front = utility.UIManager(0)
+    ui_manager_front = UIManager(0)
 
     #GOOGLE API 
     #serve per capire quando terminare il programma
-    vcom_stop = utility.speech_interaction(["stop", "ferma", "termina"])
+    vcom_stop = speech_interaction(["stop", "ferma", "termina"])
     stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
 
     while ui_manager_front.cap.isOpened() and not vcom_stop.vocal_command :
