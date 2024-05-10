@@ -1,6 +1,33 @@
 import mediapipe as mp
 import cv2
 import numpy as np
+import speech_recognition as sr
+
+class speech_interaction:
+
+    def __init__(self, grammar):
+        self.vocal_command = False 
+        self.recognizer = sr.Recognizer() 
+        self.microphone = sr.Microphone()
+        self.l_grammar = grammar
+
+    def check_voice_command(self, recognizer, audio):
+        #bisogna creare un dizionario di parole chiavi che interrompono  
+        #il programma se pronunciate
+        try:
+            # Riconosce il discorso
+            text = recognizer.recognize_google(audio, language='it-IT')
+            for parola in self.l_grammar:
+                if parola in text.lower():
+                    #print("Esecuzione interrotta dall'input vocale.")
+                    # Se la parola chiave è rilevata, imposta una variabile globale per interrompere il ciclo
+                    global stop_vocal_command 
+                    stop_vocal_command = True
+        except sr.UnknownValueError:
+            pass  # Ignora l'errore se il discorso non è chiaro
+        except sr.RequestError as e:
+            #print(f"Errore nella richiesta al servizio di riconoscimento vocale: {e}")
+            pass
 
 def draw_rectangle(image, pp , pa , color, thickness, r):
     x, y = pp[0], pp[1]
