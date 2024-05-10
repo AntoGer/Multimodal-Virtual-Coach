@@ -110,10 +110,11 @@ def ex_squat():
         if not (ui_manager_front.display_frame(merged_frame)):
             break
 
-    ui_manager_final.display_final_frame_squat(squat_counter.count, tempo_sec)
-    time.sleep(5)
+    #ui_manager_final.display_final_frame_squat(squat_counter.count, tempo_sec)
+    ui_manager_front.display_final_frame_squat(squat_counter.count, tempo_sec) 
     ui_manager_front.release_capture()
     ui_manager_1.release_capture()
+    cv2.destroyAllWindows() 
 
 def ex_wallsit():
 
@@ -216,10 +217,11 @@ def ex_wallsit():
         if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
             break
 
-    ui_manager_final.display_final_frame_wallsit(tempo_wallsit, sec_persi)
-    time.sleep(3)
+    #ui_manager_final.display_final_frame_wallsit(tempo_wallsit, sec_persi)
+    ui_manager_front.display_final_frame_wallsit(tempo_wallsit, sec_persi)
     ui_manager_front.release_capture()
     ui_manager_1.release_capture()
+    cv2.destroyAllWindows() 
     
 def ex_workout():
     #label.config(text="workout")
@@ -272,8 +274,7 @@ if __name__ == "__main__":
     button_exit = customtkinter.CTkButton(master=root, text="Esci", command=esci)
     button_exit.place(relx=0.5, rely=0.7, anchor=CENTER)
 
-    ui_manager_final = utility.UIManager("no") 
-
+    #ui_manager_final = utility.UIManager("no") 
     root.mainloop()
 
     #GOOGLE API         

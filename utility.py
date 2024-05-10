@@ -179,39 +179,41 @@ class UIManager:
     def __init__(self,sel_camera):
         #False quando mostro la schermata finale con riassunto degli
         #squat fatti
-        if sel_camera != "no":
-            self.cap = cv2.VideoCapture(sel_camera)
-            self.a_image = int(self.cap.get(4))
-            self.l_image = int(self.cap.get(3)) 
+        #if sel_camera != "no":
+        self.cap = cv2.VideoCapture(sel_camera)
+        self.a_image = int(self.cap.get(4)) 
+        self.l_image = int(self.cap.get(3)) 
         self.larghezza_nuova = 1300
         self.altezza_nuova = 850
 
     def display_final_frame_squat(self, n_squat, tempo):
         if n_squat > 0:
+            #np.full altezza, larghezza (prima Y e poi la X)
             img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,255,0), dtype =np.uint8)
-            cv2.putText(img_finale, "Hai completato "+str(n_squat)+" squat in "+ str(tempo)+ " secondi!", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
+            #putText larghezza, altezza (prima X e poi Y)
+            cv2.putText(img_finale, "Hai completato "+str(n_squat)+" squat in "+ str(tempo)+ " secondi!", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
         else: 
-            img_finale = np.full((self.altezza_nuova, self.altezza_nuova, 3),(0,0,255), dtype =np.uint8)
-            cv2.putText(img_finale, "Hai completato 0 squat in "+ str(tempo)+ " secondi!", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)
+            img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,0,255), dtype =np.uint8)
+            cv2.putText(img_finale, "Hai completato 0 squat in "+ str(tempo)+ " secondi!", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)
         while True:
             cv2.imshow("Assistente Fitness", img_finale)
-            cv2.resizeWindow("Assistente Fitness", self.altezza_nuova, self.larghezza_nuova)
+            cv2.resizeWindow("Assistente Fitness", self.larghezza_nuova, self.altezza_nuova)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break 
     
     def display_final_frame_wallsit(self, tempo_sec, sec_persi):
         if sec_persi == 0:
             img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,255,0), dtype =np.uint8) 
-            cv2.putText(img_finale, "Non hai iniziato", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
+            cv2.putText(img_finale, "Non hai iniziato", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
         elif sec_persi/tempo_sec < 0.25:
             img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,255,0), dtype =np.uint8) 
-            cv2.putText(img_finale, "Hai sbagliato per soli "+str(round(sec_persi, 1) )+" secondi su "+ str(tempo_sec) +" totali !", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
+            cv2.putText(img_finale, "Hai sbagliato per soli "+str(round(sec_persi, 1) )+" secondi su "+ str(tempo_sec) +" totali !", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
         else:
             img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,0,255), dtype =np.uint8) 
-            cv2.putText(img_finale, "Devi migliorare! Hai sbagliato per "+str(round(sec_persi, 1) )+" secondi su "+ str(tempo_sec) +" totali !", (int(self.altezza_nuova*0.25), int(self.larghezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
+            cv2.putText(img_finale, "Devi migliorare! Hai sbagliato per "+str(round(sec_persi, 1) )+" secondi su "+ str(tempo_sec) +" totali !", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
         while True:
             cv2.imshow("Assistente Fitness", img_finale)
-            cv2.resizeWindow("Assistente Fitness", self.altezza_nuova, self.larghezza_nuova)
+            cv2.resizeWindow("Assistente Fitness", self.larghezza_nuova, self.altezza_nuova)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break 
 

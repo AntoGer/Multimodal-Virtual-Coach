@@ -76,10 +76,11 @@ class Squat:
         self.istante_inizio_discesa = datetime.now() 
         self.istante_inizio_salita = datetime.now()
 
-    def squat(self, image, angle_sx, angle_dx, l_image, a_image, mp_pose, landmarks, excercise=None):
+    def squat(self, image, angle_sx, angle_dx, l_image, a_image, mp_pose, landmarks, excercise = None):
         """
         controlla esecuzione squat con diverse modalità: apprendimento, endurance e explosive.
         """
+        """ BISGONA AGGIUNGERE IL CONTROLLO TRA AMPIEZZA SPALLE E PIEDI """ 
         TIME_SLOW = 5
         TIME_FAST = 1.5
         TIME_FASTD = 0.5
@@ -173,9 +174,10 @@ class Squat:
     
 
     def back(self, image, angle_back, landmarks, l_image, a_image, mp_pose):
+        """ BISOGNA VEDERE BENE GLI ANGOLI DURANTE LA DISCESA """
         ANGLE_BACK_UP = 130
         ANGLE_BACK_DOWN = 30
-
+        
         if (self.current_position == "up" and  angle_back < ANGLE_BACK_UP) or (self.current_position == "down" and  angle_back < ANGLE_BACK_DOWN):
             utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.75), int(a_image*0.125)), (0,0,255), -1 , 20)
             cv2.putText(image, "SCHIENA TROPPO INCLINATA", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
