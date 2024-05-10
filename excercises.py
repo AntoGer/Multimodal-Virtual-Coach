@@ -6,34 +6,46 @@ import utility
 
 class Static:
     def __init__(self, sec):
-        #self.starting_instant = None
-        #self.seconds = 0
         self.ending_instant = None
         self.sec = sec
         self.position = False
-
+        self.real_ending_instant = None
+        self.inizio_pausa = datetime.max
+        self.sec_persi = 0
+        self.f_inizio_fuori = False
+        
     def wallsit(self, image, angle_dx, angle_sx, angle_back, a_image, l_image, mp_pose, landmarks):
 
         MAX_ANGLE = 100
         MIN_ANGLE = 80
+        MAX_ANGLE_BACK = 95
+        MIN_ANGLE_BACK = 85
 
-        #contatore degli squat e controllo sulle velocità di esecuzione
-        #160 è troppo  
-
-        if angle_dx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > 85 and angle_back < 95  and not self.position:
+        if angle_dx < MAX_ANGLE and angle_dx > MIN_ANGLE and angle_sx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > MIN_ANGLE_BACK and angle_back < MAX_ANGLE_BACK  and not self.position:
             #per vedere la velocità del movimento in secondi
             self.starting_instant = datetime.now() 
+            #calcolo l'istante in cui deve finire l'esercizio
             self.ending_instant = self.starting_instant + dt.timedelta(seconds = self.sec)
             self.position = True
-            utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
-            cv2.putText(image, "Esercizio iniziato!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-        elif angle_dx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > 85 and angle_back < 95  and  self.position:
-            utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
+        elif angle_dx < MAX_ANGLE and angle_dx > MIN_ANGLE and angle_sx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > MIN_ANGLE_BACK and angle_back < MAX_ANGLE_BACK and self.position:
+            utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.7), int(a_image*0.125)), (0,255,0), -1 , 20)
             cv2.putText(image, "Esercizio in esecuzione!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if datetime.now() >= self.ending_instant:#self.starting_instant + self.seconds:
-                utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
-                cv2.putText(image, "Esercizio finito!", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16) 
+            if self.f_inizio_fuori: 
+                #entri qua se hai perso tempo fuori posizione con gli angoli 
+                self.sec_persi += round((datetime.now() - self.inizio_pausa).total_seconds(), 1)  
+                self.f_inizio_fuori = False 
+                self.inizio_pausa = datetime.max  
+            if datetime.now() >= self.ending_instant: 
+                #qua poi metti la voce che dice che hai finito
+                #print("secondi persi in totale "+str(self.sec_persi))
+                pass 
 
+        if not(angle_dx < MAX_ANGLE and angle_dx > MIN_ANGLE and angle_sx < MAX_ANGLE and angle_sx > MIN_ANGLE and angle_back > MIN_ANGLE_BACK and angle_back < MAX_ANGLE_BACK) and self.position:
+            #se sto in posizione (quindi ho iniziato) ma qualche angolo sta fuori il range corretto  
+            self.inizio_pausa =  min(self.inizio_pausa, datetime.now())  
+            self.f_inizio_fuori = True 
+            utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+1), (int(l_image*0.5), int(a_image*0.125)), (0,0,255), -1 , 20)
+            cv2.putText(image, "Torna in posizione !", (int(l_image*0.015), int(a_image*0.187)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
 
         #Mostra le visibility di anca, ginocchio e caviglia dx nel frame
         cv2.putText(image, "anca dx "+ str(int(landmarks[mp_pose.PoseLandmark.RIGHT_HIP].visibility*100)),(int(l_image*0.055),int(a_image*0.855)),cv2.FONT_HERSHEY_SIMPLEX, 1 ,(255,144,30), 2, 16)
@@ -47,8 +59,8 @@ class Static:
         
         if self.position:
         #il secondo argomento calcola il tempo passato dall'inizio del 1 squat
-            return image, round((datetime.now() - self.starting_instant).total_seconds(),1)  
-        return image, 0  
+            return image, round((datetime.now() - self.starting_instant).total_seconds(),1), self.sec_persi #, self.ending_instant
+        return image, 0, self.sec_persi #, self.ending_instant 
 
 class Squat:
     def __init__(self, reps):

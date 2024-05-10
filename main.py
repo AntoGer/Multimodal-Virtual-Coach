@@ -1,6 +1,6 @@
 import mediapipe
 import cv2
-import datetime
+from datetime import datetime
 
 import excercises
 import utility
@@ -31,11 +31,16 @@ if __name__ == "__main__":
 
     posture_detector = utility.PostureDetector()
     posture_detector1 = utility.PostureDetector()
-    squat_counter = excercises.Squat(6)
-    ui_manager_front = utility.UIManager(0)
-    ui_manager_1 = utility.UIManager(1)
 
-    wallsit = excercises.Static(10) 
+    esercizio_scelto = "wallsit" #squat
+    if esercizio_scelto == "squat":
+        squat_counter = excercises.Squat(6) 
+    elif esercizio_scelto == "wallsit":
+            tempo_wallsit = 10
+            wallsit = excercises.Static(tempo_wallsit)
+            sec_persi = 0
+    ui_manager_front = utility.UIManager(0)
+    ui_manager_1 = utility.UIManager(1) 
 
     #GOOGLE API 
     #serve per capire quando terminare il programma
@@ -57,10 +62,13 @@ if __name__ == "__main__":
             #se non vede nessuno lancia l'eccezione
             merged_frame = cv2.hconcat([frame, frame_1])
             if tempo_sec > 0:
-                #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
+                #timer bianco
                 cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                if esercizio_scelto == "squat":
+                    cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                elif esercizio_scelto == "wallsit":
+                    cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             if not ui_manager_front.display_frame(merged_frame):
                 break
             continue 
@@ -70,10 +78,16 @@ if __name__ == "__main__":
         if errore:
             merged_frame = cv2.hconcat([frame, frame_1])
             if tempo_sec > 0:
-                #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
-                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
-                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                if esercizio_scelto == "squat":
+                    #timer bianco
+                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                    cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                elif esercizio_scelto == "wallsit":
+                    #timer viola
+                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
+                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                    cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             if not ui_manager_front.display_frame(merged_frame):
                 break 
             continue
@@ -88,10 +102,13 @@ if __name__ == "__main__":
             #se non vede nessuno lancia l'eccezione
             merged_frame = cv2.hconcat([frame, frame_1])
             if tempo_sec > 0:
-                #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
+                #timer bianco
                 cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                if esercizio_scelto == "squat":
+                    cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                elif esercizio_scelto == "wallsit":
+                    cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             if not ui_manager_front.display_frame(merged_frame):
                 break
             continue 
@@ -101,10 +118,16 @@ if __name__ == "__main__":
         if errore_1:
             merged_frame = cv2.hconcat([frame, frame_1])
             if tempo_sec > 0:
-                #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
-                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
-                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                if esercizio_scelto == "squat":
+                    #timer bianco
+                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                    cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                elif esercizio_scelto == "wallsit":
+                    #timer viola
+                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
+                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                    cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             if not ui_manager_front.display_frame(merged_frame):
                 break 
             continue
@@ -119,19 +142,24 @@ if __name__ == "__main__":
         
         #calcola angoli, li mostra e controllo agolazione schiena (camera laterale)
         absx, hip_sx = posture_detector1.calculate_angles_back(landmarks_1)
-        frame_1 = posture_detector.show_angles(frame_1, absx, hip_sx, ui_manager_1.l_image, ui_manager_1.a_image)
+        frame_1 = posture_detector1.show_angles(frame_1, absx, hip_sx, ui_manager_1.l_image, ui_manager_1.a_image)
         
-        #frame_1 = squat_counter.back(frame_1, absx, landmarks_1, ui_manager_1.l_image, ui_manager_1.a_image, posture_detector.mp_pose, landmarks)
-        frame, tempo_sec = wallsit.wallsit(frame, adx, asx, absx, ui_manager_front.a_image, ui_manager_front.l_image, posture_detector.mp_pose, landmarks)
+        if esercizio_scelto == "squat":
+            frame, tempo_sec = squat_counter.squat(frame, asx, adx, ui_manager_front.l_image, ui_manager_front.a_image, posture_detector.mp_pose, landmarks)
+            frame_1 = squat_counter.back(frame_1, absx, landmarks_1, ui_manager_1.l_image, ui_manager_1.a_image, posture_detector.mp_pose)
+
+        elif esercizio_scelto == "wallsit": 
+            frame, tempo_sec, sec_persi = wallsit.wallsit(frame, adx, asx, absx, ui_manager_front.a_image, ui_manager_front.l_image, posture_detector.mp_pose, landmarks)
 
         merged_frame = cv2.hconcat([frame, frame_1])
-        #print(ui_manager_front.larghezza_nuova, ui_manager_front.altezza_nuova)
+        #timer viola
         cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
         #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
         cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
    
-        if not ui_manager_front.display_frame(merged_frame):
+        if not (ui_manager_front.display_frame(merged_frame)) or (esercizio_scelto=="wallsit" and tempo_sec > tempo_wallsit):
             break
+
 
     #GOOGLE API         
     stop_listening(wait_for_stop = False)
@@ -139,7 +167,9 @@ if __name__ == "__main__":
     ui_manager_front.release_capture()
     ui_manager_1.release_capture() 
 
-    ui_manager_final = utility.UIManager("no")  
-    ui_manager_final.display_final_frame(squat_counter.count, tempo_sec)
-    
+    ui_manager_final = utility.UIManager("no") 
+    if esercizio_scelto == "squat":  
+        ui_manager_final.display_final_frame_squat(squat_counter.count, tempo_sec)
+    elif esercizio_scelto == "wallsit":
+        ui_manager_final.display_final_frame_wallsit(tempo_wallsit, sec_persi) 
     cv2.destroyAllWindows()
