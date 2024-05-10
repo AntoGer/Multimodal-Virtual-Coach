@@ -1,5 +1,6 @@
 import cv2
 from datetime import datetime
+import time
 
 import excercises
 import utility
@@ -11,6 +12,12 @@ import customtkinter
 
     
 def ex_squat():
+
+    posture_detector = utility.PostureDetector()
+    posture_detector1 = utility.PostureDetector() 
+    
+    ui_manager_front = utility.UIManager(0)
+    ui_manager_1 = utility.UIManager(1)
     
     squat_counter = excercises.Squat(6)
 
@@ -104,8 +111,17 @@ def ex_squat():
             break
 
     ui_manager_final.display_final_frame_squat(squat_counter.count, tempo_sec)
+    time.sleep(5)
+    ui_manager_front.release_capture()
+    ui_manager_1.release_capture()
 
 def ex_wallsit():
+
+    posture_detector = utility.PostureDetector()
+    posture_detector1 = utility.PostureDetector() 
+    
+    ui_manager_front = utility.UIManager(0)
+    ui_manager_1 = utility.UIManager(1)
 
     tempo_sec = 0
 
@@ -129,7 +145,7 @@ def ex_wallsit():
                 cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                 cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if tempo_sec > tempo_wallsit:
+            if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
                 break
             continue 
 
@@ -142,7 +158,7 @@ def ex_wallsit():
                 cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                 cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if tempo_sec > tempo_wallsit:
+            if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
                 break  
             continue
         #qui non può dare errore perchè i landmark ce li hai per forza 
@@ -160,7 +176,7 @@ def ex_wallsit():
                 cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                 cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if tempo_sec > tempo_wallsit:
+            if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
                 break
             continue 
 
@@ -173,7 +189,7 @@ def ex_wallsit():
                 cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                 cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if tempo_sec > tempo_wallsit:
+            if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
                 break 
             continue
         #qui non può dare errore perchè i landmark ce li hai per forza 
@@ -197,10 +213,13 @@ def ex_wallsit():
         #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
         cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
    
-        if not tempo_sec > tempo_wallsit:
+        if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
             break
 
     ui_manager_final.display_final_frame_wallsit(tempo_wallsit, sec_persi)
+    time.sleep(3)
+    ui_manager_front.release_capture()
+    ui_manager_1.release_capture()
     
 def ex_workout():
     #label.config(text="workout")
@@ -210,13 +229,7 @@ def ex_workout():
 def esci():
     root.destroy()
 
-if __name__ == "__main__":
-
-    posture_detector = utility.PostureDetector()
-    posture_detector1 = utility.PostureDetector() 
-    
-    ui_manager_front = utility.UIManager(0)
-    ui_manager_1 = utility.UIManager(1) 
+if __name__ == "__main__": 
 
     #GOOGLE API 
     #serve per capire quando terminare il programma
@@ -264,9 +277,6 @@ if __name__ == "__main__":
     root.mainloop()
 
     #GOOGLE API         
-    stop_listening(wait_for_stop = False)
-
-    ui_manager_front.release_capture()
-    ui_manager_1.release_capture() 
+    stop_listening(wait_for_stop = False) 
 
     cv2.destroyAllWindows()

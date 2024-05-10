@@ -21,8 +21,8 @@ class speech_interaction:
                 if parola in text.lower():
                     #print("Esecuzione interrotta dall'input vocale.")
                     # Se la parola chiave è rilevata, imposta una variabile globale per interrompere il ciclo
-                    global stop_vocal_command 
-                    stop_vocal_command = True
+                    #global stop_vocal_command 
+                    self.vocal_command = True
         except sr.UnknownValueError:
             pass  # Ignora l'errore se il discorso non è chiaro
         except sr.RequestError as e:
@@ -235,3 +235,29 @@ class UIManager:
   
     def release_capture(self):
         self.cap.release()
+
+import utility
+
+if __name__ == "__main__": 
+
+    ui_manager_front = utility.UIManager(0)
+
+    #GOOGLE API 
+    #serve per capire quando terminare il programma
+    vcom_stop = utility.speech_interaction(["stop", "ferma", "termina"])
+    stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
+
+    while ui_manager_front.cap.isOpened() and not vcom_stop.vocal_command :
+        
+        ret, frame = ui_manager_front.cap.read()
+
+        ui_manager_front.display_frame(frame)
+
+        if vcom_stop.vocal_command == True:
+            print("si")
+
+    #GOOGLE API         
+    stop_listening(wait_for_stop = False)
+
+    ui_manager_front.release_capture()
+    cv2.destroyAllWindows()
