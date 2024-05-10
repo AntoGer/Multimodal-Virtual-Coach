@@ -69,7 +69,7 @@ if __name__ == "__main__":
                     cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
                 elif esercizio_scelto == "wallsit":
                     cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if not ui_manager_front.display_frame(merged_frame):
+            if not (ui_manager_front.display_frame(merged_frame)) or (esercizio_scelto=="wallsit" and tempo_sec > tempo_wallsit):
                 break
             continue 
 
@@ -88,8 +88,8 @@ if __name__ == "__main__":
                     cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
                     #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                     cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if not ui_manager_front.display_frame(merged_frame):
-                break 
+            if not (ui_manager_front.display_frame(merged_frame)) or (esercizio_scelto=="wallsit" and tempo_sec > tempo_wallsit):
+                break  
             continue
         #qui non può dare errore perchè i landmark ce li hai per forza 
         frame = posture_detector.draw_landmarks(frame, results.pose_landmarks)
@@ -109,7 +109,7 @@ if __name__ == "__main__":
                     cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
                 elif esercizio_scelto == "wallsit":
                     cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if not ui_manager_front.display_frame(merged_frame):
+            if not (ui_manager_front.display_frame(merged_frame)) or (esercizio_scelto=="wallsit" and tempo_sec > tempo_wallsit):
                 break
             continue 
 
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                     cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
                     #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                     cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if not ui_manager_front.display_frame(merged_frame):
+            if not (ui_manager_front.display_frame(merged_frame)) or (esercizio_scelto=="wallsit" and tempo_sec > tempo_wallsit):
                 break 
             continue
         #qui non può dare errore perchè i landmark ce li hai per forza 
