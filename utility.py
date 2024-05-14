@@ -2,18 +2,27 @@ import mediapipe as mp
 import cv2
 import numpy as np
 import speech_recognition as sr
+from datetime import datetime
+import time 
 
 class speech_interaction:
 
     def __init__(self, grammar):
         self.vocal_command = False 
         self.recognizer = sr.Recognizer() 
-        self.microphone = sr.Microphone()
+        self.microphone = sr.Microphone(0)
         self.l_grammar = grammar
+        #qui si fa calibrazione del microfono per 1 secondo, in modo da distinguere 
+        #il rumore dalla voce
+        with self.microphone as self.source:
+            print("Silenzio per 1 secondo per calibrazione microfono!") 
+            self.recognizer.adjust_for_ambient_noise(self.source) 
+            print("Fatto")
 
     def check_voice_command(self, recognizer, audio):
         #bisogna creare un dizionario di parole chiavi che interrompono  
         #il programma se pronunciate
+        print("in ascolto...")
         try:
             # Riconosce il discorso
             text = recognizer.recognize_google(audio, language='it-IT')
@@ -23,10 +32,8 @@ class speech_interaction:
                     # Se la parola chiave è rilevata, imposta una variabile globale per interrompere il ciclo
                     #global stop_vocal_command 
                     self.vocal_command = True
-        except sr.UnknownValueError:
-            pass  # Ignora l'errore se il discorso non è chiaro
-        except sr.RequestError as e:
-            #print(f"Errore nella richiesta al servizio di riconoscimento vocale: {e}")
+                    print(text.lower()) 
+        except:
             pass
 
 def draw_rectangle(image, pp , pa , color, thickness, r):
@@ -201,16 +208,21 @@ class UIManager:
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break 
     
-    def display_final_frame_wallsit(self, tempo_sec, sec_persi):
+    def display_final_frame_wallsit(self, durata_reale_sec, sec_persi, iniziato):
         if sec_persi == 0:
+            if not(iniziato): 
+                #allora non hai mai iniziato, non sei mai stato in posizione corretta
+                img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,0,255), dtype =np.uint8) 
+                cv2.putText(img_finale, "Non hai mai iniziato !", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)
+            else:
+                img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,255 ,0), dtype =np.uint8) 
+                cv2.putText(img_finale, "Esecuzione perfetta !", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)
+        elif sec_persi/durata_reale_sec < 0.3: 
             img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,255,0), dtype =np.uint8) 
-            cv2.putText(img_finale, "Non hai iniziato", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.4)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
-        elif sec_persi/tempo_sec < 0.25:
-            img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,255,0), dtype =np.uint8) 
-            cv2.putText(img_finale, "Hai sbagliato per soli "+str(round(sec_persi, 1) )+" secondi su "+ str(tempo_sec) +" totali !", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
+            cv2.putText(img_finale, "Hai sbagliato per soli "+str(round(sec_persi, 1) )+" secondi su "+ str(durata_reale_sec) +" totali !", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
         else:
             img_finale = np.full((self.altezza_nuova, self.larghezza_nuova, 3),(0,0,255), dtype =np.uint8) 
-            cv2.putText(img_finale, "Devi migliorare! Hai sbagliato per "+str(round(sec_persi, 1) )+" secondi su "+ str(tempo_sec) +" totali !", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
+            cv2.putText(img_finale, "Devi migliorare! Hai sbagliato per "+str(round(sec_persi, 1) )+" secondi su "+ str(durata_reale_sec) +" totali !", (int(self.larghezza_nuova*0.25), int(self.altezza_nuova*0.25)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2, 16)  
         while True:
             cv2.imshow("Assistente Fitness", img_finale)
             cv2.resizeWindow("Assistente Fitness", self.larghezza_nuova, self.altezza_nuova)

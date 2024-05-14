@@ -21,10 +21,11 @@ def ex_squat():
     
     squat_counter = excercises.Squat(6)
 
-    tempo_sec=0
+    tempo_sec=0  
+    vcom_stop = utility.speech_interaction(["stop", "ferma", "termina", "fine", "finisci"])
+    stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
 
     while ui_manager_front.cap.isOpened() and not vcom_stop.vocal_command:
-
         ret, frame = ui_manager_front.cap.read()
         ret_1, frame_1 = ui_manager_1.cap.read()
         try:
@@ -92,7 +93,6 @@ def ex_squat():
         asx, adx = posture_detector.calculate_angles(landmarks)
         frame = posture_detector.show_angles(frame, asx, posture_detector.knee_point_sx, ui_manager_front.l_image, ui_manager_front.a_image)
         frame = posture_detector.show_angles(frame, adx, posture_detector.knee_point_dx, ui_manager_front.l_image, ui_manager_front.a_image)
-        #frame, tempo_sec = squat_counter.squat(frame, asx, adx, ui_manager_front.l_image, ui_manager_front.a_image, posture_detector.mp_pose, landmarks)
         
         #calcola angoli, li mostra e controllo agolazione schiena (camera laterale)
         absx, hip_sx = posture_detector1.calculate_angles_back(landmarks_1)
@@ -111,6 +111,8 @@ def ex_squat():
             break
 
     #ui_manager_final.display_final_frame_squat(squat_counter.count, tempo_sec)
+    #GOOGLE API         
+    stop_listening(wait_for_stop = False) 
     ui_manager_front.display_final_frame_squat(squat_counter.count, tempo_sec) 
     ui_manager_front.release_capture()
     ui_manager_1.release_capture()
@@ -126,9 +128,13 @@ def ex_wallsit():
 
     tempo_sec = 0
 
+    #durata prevista dell'esercizio
     tempo_wallsit = 10
     wallsit = excercises.Static(tempo_wallsit)
-    sec_persi = 0
+    
+    vcom_stop = utility.speech_interaction(["stop", "ferma", "termina", "fine", "finisci"])
+    stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
+    istante_ultimo_wallsit = None 
 
     while ui_manager_front.cap.isOpened() and not vcom_stop.vocal_command :
 
@@ -142,10 +148,17 @@ def ex_wallsit():
             #se non vede nessuno lancia l'eccezione
             merged_frame = cv2.hconcat([frame, frame_1])
             if tempo_sec > 0:
-                #timer bianco
-                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+                if istante_ultimo_wallsit != None:
+                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
+                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                    cv2.putText(merged_frame, str(round(tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                    if tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1) > tempo_wallsit:
+                        break
+                #timer viola
+                """cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                 cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                """
             if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
                 break
             continue 
@@ -155,10 +168,17 @@ def ex_wallsit():
         if errore:
             merged_frame = cv2.hconcat([frame, frame_1])
             if tempo_sec > 0:
+                if istante_ultimo_wallsit != None:
+                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
+                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                    cv2.putText(merged_frame, str(round(tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                    if tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1) > tempo_wallsit:
+                        break
                 #timer viola
-                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
+                """cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                 cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                """
             if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
                 break  
             continue
@@ -173,10 +193,17 @@ def ex_wallsit():
             #se non vede nessuno lancia l'eccezione
             merged_frame = cv2.hconcat([frame, frame_1])
             if tempo_sec > 0:
-                #timer bianco
-                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+                if istante_ultimo_wallsit != None:
+                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
+                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                    cv2.putText(merged_frame, str(round(tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                    if tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1) > tempo_wallsit:
+                        break
+                """#timer viola
+                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                 cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                """
             if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
                 break
             continue 
@@ -186,10 +213,17 @@ def ex_wallsit():
         if errore_1:
             merged_frame = cv2.hconcat([frame, frame_1])
             if tempo_sec > 0:
-                #timer viola
+                if istante_ultimo_wallsit != None:
+                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
+                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                    cv2.putText(merged_frame, str(round(tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                    if tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1) > tempo_wallsit:
+                        break
+                """#timer viola
                 cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
                 #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
                 cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                """
             if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
                 break 
             continue
@@ -206,8 +240,8 @@ def ex_wallsit():
         absx, hip_sx = posture_detector1.calculate_angles_back(landmarks_1)
         frame_1 = posture_detector1.show_angles(frame_1, absx, hip_sx, ui_manager_1.l_image, ui_manager_1.a_image)
          
-        frame, tempo_sec, sec_persi = wallsit.wallsit(frame, adx, asx, absx, ui_manager_front.a_image, ui_manager_front.l_image, posture_detector.mp_pose, landmarks)
-
+        frame, tempo_sec, istante_ultimo_wallsit = wallsit.wallsit(frame, adx, asx, absx, ui_manager_front.a_image, ui_manager_front.l_image, posture_detector.mp_pose, landmarks)
+        #print("secondi persi "+str(wallsit.sec_persi))
         merged_frame = cv2.hconcat([frame, frame_1])
         #timer viola
         cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
@@ -216,9 +250,11 @@ def ex_wallsit():
    
         if not (ui_manager_front.display_frame(merged_frame)) or tempo_sec > tempo_wallsit:
             break
-
     #ui_manager_final.display_final_frame_wallsit(tempo_wallsit, sec_persi)
-    ui_manager_front.display_final_frame_wallsit(tempo_wallsit, sec_persi)
+    #GOOGLE API         
+    stop_listening(wait_for_stop = False) 
+    ui_manager_front.display_final_frame_wallsit(tempo_wallsit, wallsit.sec_persi, wallsit.position)
+    
     ui_manager_front.release_capture()
     ui_manager_1.release_capture()
     cv2.destroyAllWindows() 
@@ -235,7 +271,7 @@ if __name__ == "__main__":
 
     #GOOGLE API 
     #serve per capire quando terminare il programma
-    vcom_stop = utility.speech_interaction(["stop", "ferma", "termina"])
+    vcom_stop = utility.speech_interaction(["stop", "ferma", "termina", "fine", "finisci"])
     stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
 
     #Setting up theme of your app, or light
