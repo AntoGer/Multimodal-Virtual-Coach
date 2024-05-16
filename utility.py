@@ -14,9 +14,9 @@ class speech_interaction:
         self.l_grammar = grammar
         #qui si fa calibrazione del microfono per 1 secondo, in modo da distinguere 
         #il rumore dalla voce
-        with self.microphone as self.source:
+        with self.microphone as source:
             print("Silenzio per 1 secondo per calibrazione microfono!") 
-            self.recognizer.adjust_for_ambient_noise(self.source) 
+            self.recognizer.adjust_for_ambient_noise(source) 
             print("Fatto")
 
     def check_voice_command(self, recognizer, audio):
@@ -26,15 +26,19 @@ class speech_interaction:
         try:
             # Riconosce il discorso
             text = recognizer.recognize_google(audio, language='it-IT')
+            print("hai detto "+text) 
             for parola in self.l_grammar:
                 if parola in text.lower():
                     #print("Esecuzione interrotta dall'input vocale.")
                     # Se la parola chiave è rilevata, imposta una variabile globale per interrompere il ciclo
                     #global stop_vocal_command 
                     self.vocal_command = True
-                    print(text.lower()) 
-        except:
-            pass
+                    print("interruzione per "+text.lower()) 
+                    break 
+        except sr.UnknownValueError:
+            print("Non ho capito.")
+        except sr.RequestError as e:
+            print(f"Errore nella richiesta al servizio di riconoscimento vocale: {e}")
 
 def draw_rectangle(image, pp , pa , color, thickness, r):
     x, y = pp[0], pp[1]

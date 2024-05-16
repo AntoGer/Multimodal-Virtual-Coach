@@ -80,14 +80,14 @@ class Static:
 
 class Squat:
     def __init__(self, reps):
-        self.starting_instant = datetime.now()
+        self.starting_instant = datetime.now() #datetime.min 
         self.reps = reps
         self.current_direction = None
         self.count = 0 
         self.fast_up = False
         self.fast_d = False
-        self.slow_up = True
-        self.slow_d = True
+        self.slow_up = False
+        self.slow_d = False 
         self.current_position = None
         self.istante_inizio_discesa = datetime.now() 
         self.istante_inizio_salita = datetime.now()
@@ -99,13 +99,13 @@ class Squat:
         controlla esecuzione squat con diverse modalità: apprendimento, endurance e explosive.
         """
         """ BISGONA AGGIUNGERE IL CONTROLLO TRA AMPIEZZA SPALLE E PIEDI, ok """ 
-        TIME_SLOW = 3#5
+        TIME_SLOW = 2.5#5
         TIME_FAST = 1#1.5
         TIME_FASTD = 0.2#0.5
         MAX_ANGLE = 140
         MIN_ANGLE = 100#60 #135
         MIN_ANGLE_DOWN = 60#45
-        SOGLIA_SPALLE_CAVIGLIA = 0.75
+        SOGLIA_SPALLE_CAVIGLIA = 0.8
         spalla_dx_x =  landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER].x
         spalla_sx_x =  landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER].x
         caviglia_dx_x =  landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE].x
@@ -195,8 +195,11 @@ class Squat:
                 self.troppo_giu = False 
         else:
             utility.draw_rectangle(image, (int(l_image*0.005), int(a_image*0.125)+5), (int(l_image*0.5), int(a_image*0.125)), (0,255,0), -1 , 20)
-            #rettangolo verde se esecuzione
-            if self.current_direction == "up":
+            #rettangolo verde se esecuzione è ok
+            if self.current_position == "up" and self.count == 0:
+                #quando stai in posizione iniziale giusta
+                cv2.putText(image, "Puoi iniziare ora!", (int(l_image*0.015), int(a_image*0.190)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)  
+            elif self.current_direction == "up":
                 cv2.putText(image, "Ok, ora su!", (int(l_image*0.015), int(a_image*0.190)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)  
             elif self.current_direction == "down":
                 cv2.putText(image, "Ok, ora giu!", (int(l_image*0.015), int(a_image*0.190)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)    

@@ -10,7 +10,8 @@ import speech_recognition as sr
 from tkinter import *
 import customtkinter
 
-    
+import pyttsx3
+import re
 def ex_squat():
 
     posture_detector = utility.PostureDetector()
@@ -18,14 +19,65 @@ def ex_squat():
     
     ui_manager_front = utility.UIManager(0)
     ui_manager_1 = utility.UIManager(1)
-    
-    squat_counter = excercises.Squat(6)
 
-    tempo_sec=0  
+
+    #qua voglio mettere una voce che ti dice quante ripetizioni vuoi fare, altrimenti dici libero
+    #e poi metti controllo in Squat per vedere se arrivi a lla soglia di ripetizioni prefissata 
+    #Google speech recognition prende numero  come intero e non come testo (se dico venti => 20)
+    
+    engine = pyttsx3.init() 
+    voices = engine.getProperty('voices')
+    engine.setProperty('rate', 200)
+    engine.setProperty('voice', voices[0].id )
+    #for voce in voices:    
+    #    print("ECCO ",voce, " FINE") 
+    engine.say("Quante ripetizioni vuoi fare da 1 a 20? Altrimenti di :esercizio libero, per farne quante ne vuoi")
+    engine.runAndWait() 
+    #per le risposte, avvolte lo speech recognition scrive la cifra e altre volte la parola
+    dict_num = {"uno":1, "due":2, "tre":3, "quattro":4,"cinque":5,"sei":6,"sette":7,"otto":8,"nove":9,"dieci":10,"undici":1,"dodici":12,"tredici":13,"quattordici":14,"quindici":15,"sedici":16,"diciassette":17, "diciotto":18,"diciannove":19,"venti":20}
+    # obtain audio from the microphone
+    r = sr.Recognizer()
+    scelta = None
+    f = False
+    with sr.Microphone() as source:
+        print("Rispondi ora") 
+        while True:
+            audio = r.listen(source)
+            try:
+                scelta =  r.recognize_google(audio, language="it-IT")
+                print("primo input "+scelta ) 
+                if "esercizio libero" in scelta.lower():
+                    scelta = 1000
+                    break
+                numero = re.search(r'\d+', scelta)
+                if numero:
+                    #significa che c'è un numero gia come intero stringa
+                    scelta = int(numero.group())
+                    print("Google Speech Recognition thinks you said " +str(scelta))
+                    break 
+                for num in dict_num:
+                    #se lo scrive a parole
+                    if num in scelta.split():
+                        scelta = dict_num[num] 
+                        f = True
+                        print("Google Speech Recognition thinks you said " +str(scelta))
+                        break  
+                if f:
+                    break
+            except sr.UnknownValueError:
+                print("Google Speech Recognition could not understand audio")
+            except sr.RequestError as e:
+                print("Could not request results from Google Speech Recognition service; {0}".format(e))
+    print("Ok, facciamo "+ str(scelta)+ " squat")
+    num_squat = scelta 
+    squat_counter = excercises.Squat(num_squat)
+    tempo_sec = 0  
     vcom_stop = utility.speech_interaction(["stop", "ferma", "termina", "fine", "finisci"])
     stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
-
-    while ui_manager_front.cap.isOpened() and not vcom_stop.vocal_command:
+    
+    
+    #while ui_manager_front.cap.isOpened() and not vocal_command and squat_counter.count < num_squat:
+    while ui_manager_front.cap.isOpened() and not vcom_stop.vocal_command and squat_counter.count < num_squat:
         ret, frame = ui_manager_front.cap.read()
         ret_1, frame_1 = ui_manager_1.cap.read()
         try:
@@ -128,8 +180,52 @@ def ex_wallsit():
 
     tempo_sec = 0
 
+    engine = pyttsx3.init() 
+    voices = engine.getProperty('voices')
+    engine.setProperty('rate', 200)
+    engine.setProperty('voice', voices[0].id )
+    #for voce in voices:    
+    #    print("ECCO ",voce, " FINE") 
+    engine.say("Quante secondi da 1 a 20? Altrimenti di :esercizio libero, per farne quante ne vuoi")
+    engine.runAndWait() 
+    #per le risposte, avvolte lo speech recognition scrive la cifra e altre volte la parola
+    dict_num = {"uno":1, "due":2, "tre":3, "quattro":4,"cinque":5,"sei":6,"sette":7,"otto":8,"nove":9,"dieci":10,"undici":11,"dodici":12,"tredici":13,"quattordici":14,"quindici":15,"sedici":16,"diciassette":17, "diciotto":18,"diciannove":19,"venti":20}
+    # obtain audio from the microphone
+    r = sr.Recognizer()
+    scelta = None
+    f = False
+    with sr.Microphone() as source:
+        print("Rispondi ora") 
+        while True:
+            audio = r.listen(source)
+            try:
+                scelta =  r.recognize_google(audio, language="it-IT")
+                print("primo input "+scelta ) 
+                if "esercizio libero" in scelta.lower():
+                    scelta = 1000
+                    break
+                numero = re.search(r'\d+', scelta)
+                if numero:
+                    #significa che c'è un numero gia come intero stringa
+                    scelta = int(numero.group())
+                    print("Google Speech Recognition thinks you said " +str(scelta))
+                    break 
+                for num in dict_num:
+                    #se lo scrive a parole
+                    if num in scelta.split():
+                        scelta = dict_num[num] 
+                        f = True
+                        print("Google Speech Recognition thinks you said " +str(scelta))
+                        break  
+                if f:
+                    break
+            except sr.UnknownValueError:
+                print("Google Speech Recognition could not understand audio")
+            except sr.RequestError as e:
+                print("Could not request results from Google Speech Recognition service; {0}".format(e))
+    print("Ok, facciamo "+ str(scelta)+ " secondi") 
     #durata prevista dell'esercizio
-    tempo_wallsit = 10
+    tempo_wallsit = scelta #10
     wallsit = excercises.Static(tempo_wallsit)
     
     vcom_stop = utility.speech_interaction(["stop", "ferma", "termina", "fine", "finisci"])
