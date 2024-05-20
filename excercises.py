@@ -18,10 +18,10 @@ class Static:
 
     def wallsit(self, image, angle_dx, angle_sx, angle_back, a_image, l_image, mp_pose, landmarks):
 
-        MAX_ANGLE = 100
-        MIN_ANGLE = 80
-        MAX_ANGLE_BACK = 100
-        MIN_ANGLE_BACK = 80
+        MAX_ANGLE = 105
+        MIN_ANGLE = 85
+        MAX_ANGLE_BACK = 110
+        MIN_ANGLE_BACK = 90
         SOGLIA_SPALLE_CAVIGLIA = 0.8
         spalla_dx_x =  landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER].x
         spalla_sx_x =  landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER].x

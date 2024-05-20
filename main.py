@@ -1,6 +1,5 @@
 import cv2
 from datetime import datetime
-import time
 
 import excercises
 import utility
@@ -12,6 +11,7 @@ import customtkinter
 
 import pyttsx3
 import re
+
 def ex_squat():
 
     posture_detector = utility.PostureDetector()
@@ -357,7 +357,8 @@ def ex_wallsit():
     
 def ex_workout():
     #label.config(text="workout")
-    pass
+    ex_squat()
+    ex_wallsit()
 
 # Funzione per uscire dal programma
 def esci():
