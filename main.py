@@ -368,7 +368,7 @@ if __name__ == "__main__":
 
     #GOOGLE API 
     #serve per capire quando terminare il programma
-    vcom_stop = utility.speech_interaction(["stop", "ferma", "termina", "fine", "finisci"])
+    vcom_stop = utility.speech_interaction(["squat", "wallsit", "workout", "esci"])
     stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
 
     #Setting up theme of your app, or light
@@ -406,6 +406,15 @@ if __name__ == "__main__":
     # Creazione dei bottoni per le azioni
     button_exit = customtkinter.CTkButton(master=root, text="Esci", command=esci)
     button_exit.place(relx=0.5, rely=0.7, anchor=CENTER)
+
+    switch_var = customtkinter.StringVar(value="True")
+
+    switch = customtkinter.CTkSwitch(master=root, text="Speech interaction", variable=switch_var, onvalue="True", offvalue="False")
+    switch.place(relx=0.05, rely=0.95, anchor=SW)
+    #switch_var.get() ottieni valore pulsante
+
+    if vcom_stop.vocal_command and switch_var.get():
+        esci()
 
     #ui_manager_final = utility.UIManager("no") 
     root.mainloop()

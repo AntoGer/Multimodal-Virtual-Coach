@@ -240,16 +240,6 @@ class UIManager:
         if cv2.waitKey(10) & 0xFF == ord('q'):
             return False
         return True
-    
-    def display_double_frame(self, frame, frame_2):
-        img_composta = np.concatenate((cv2.resize(frame, (self.l_image, self.a_image)), cv2.resize(frame_2,(self.l_image, self.a_image))), axis=1) 
-        img_nuova = cv2.resize(img_composta, (self.larghezza_nuova, self.altezza_nuova))
-        #crea popup con il video
-        cv2.imshow("Assistente Fitness", img_nuova) 
-        cv2.resizeWindow("Assistente Fitness", self.larghezza_nuova, self.altezza_nuova)
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            return False
-        return True
   
     def release_capture(self):
         self.cap.release()
