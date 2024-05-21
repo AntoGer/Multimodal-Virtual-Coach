@@ -407,15 +407,6 @@ if __name__ == "__main__":
     button_exit = customtkinter.CTkButton(master=root, text="Esci", command=esci)
     button_exit.place(relx=0.5, rely=0.7, anchor=CENTER)
 
-    switch_var = customtkinter.StringVar(value="True")
-
-    switch = customtkinter.CTkSwitch(master=root, text="Speech interaction", variable=switch_var, onvalue="True", offvalue="False")
-    switch.place(relx=0.05, rely=0.95, anchor=SW)
-    #switch_var.get() ottieni valore pulsante
-
-    if vcom_stop.vocal_command and switch_var.get():
-        esci()
-
     #ui_manager_final = utility.UIManager("no") 
     root.mainloop()
 
