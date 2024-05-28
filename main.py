@@ -78,6 +78,23 @@ def ex_squat():
             if not (ui_manager_front.display_frame(merged_frame)):
                 break
             continue 
+        
+        #estraggo landmark e li mostro (camera laterale)
+        try:
+            landmarks_1, results_1 = posture_detector1.detect_posture(frame_1)
+        except :
+            #se non vede nessuno lancia l'eccezione
+            utility.draw_rectangle(frame_1, (int(ui_manager_1.l_image*0.005), int(ui_manager_1.a_image*0.005)), (int(ui_manager_1.l_image*0.33), int(ui_manager_1.a_image*0.125)), (0,0,255), -1 , 20)
+            cv2.putText(frame_1, "Non ti vedo!", (int(ui_manager_1.l_image*0.015), int(ui_manager_1.a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+            merged_frame = cv2.hconcat([frame, frame_1])
+            if tempo_sec > 0:
+                #timer bianco
+                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
+                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+            if not (ui_manager_front.display_frame(merged_frame)):
+                break
+            continue
 
         #questo non da errori neanche se non ci sono landmark
         frame, errore = posture_detector.check_landmarks(frame, ui_manager_front.l_image, ui_manager_front.a_image, landmarks, 0)
@@ -93,21 +110,6 @@ def ex_squat():
             continue
         #qui non può dare errore perchè i landmark ce li hai per forza 
         frame = posture_detector.draw_landmarks(frame, results.pose_landmarks)
-        
-        #estraggo landmark e li mostro (camera laterale)
-        try:
-            landmarks_1, results_1 = posture_detector1.detect_posture(frame_1)
-        except :
-            #se non vede nessuno lancia l'eccezione
-            merged_frame = cv2.hconcat([frame, frame_1])
-            if tempo_sec > 0:
-                #timer bianco
-                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1)
-                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                cv2.putText(merged_frame, str(round((datetime.now() - squat_counter.starting_instant).total_seconds(),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-            if not (ui_manager_front.display_frame(merged_frame)):
-                break
-            continue 
 
         #controllo visibilità landmark camera laterale 
         frame_1, errore_1 = posture_detector1.check_landmarks(frame_1, ui_manager_1.l_image, ui_manager_1.a_image, landmarks_1, 1)
@@ -181,10 +183,30 @@ def ex_wallsit():
         ret_1, frame_1 = ui_manager_1.cap.read()
         try:
             #estraggo landmark, controllo visibilità e li mostro (webcam avanti)
-            landmarks, results = posture_detector.detect_posture(frame)
-            #print(landmarks)
+            landmarks, results = posture_detector.detect_posture(frame) 
         except:
             #se non vede nessuno lancia l'eccezione
+            merged_frame = cv2.hconcat([frame, frame_1])
+            utility.draw_rectangle(merged_frame, (int(ui_manager_front.l_image*0.005), int(ui_manager_front.a_image*0.005)), (int(ui_manager_front.l_image*0.33), int(ui_manager_front.a_image*0.125)), (0,0,255), -1 , 20)
+            cv2.putText(merged_frame, "Non ti vedo!", (int(ui_manager_front.l_image*0.015), int(ui_manager_front.a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+            if tempo_sec > 0:
+                if istante_ultimo_wallsit != None:
+                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
+                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
+                    cv2.putText(merged_frame, str(round(tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
+                    if tempo_wallsit != None and tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1) > tempo_wallsit:
+                        break
+            if not (ui_manager_front.display_frame(merged_frame)) or (tempo_wallsit != None and tempo_sec > tempo_wallsit):
+                break
+            continue 
+        
+        #estraggo landmark e li mostro (camera laterale)
+        try:
+            landmarks_1, results_1 = posture_detector1.detect_posture(frame_1)
+        except :
+            #se non vede nessuno lancia l'eccezione
+            utility.draw_rectangle(frame_1, (int(ui_manager_1.l_image*0.005), int(ui_manager_1.a_image*0.005)), (int(ui_manager_1.l_image*0.33), int(ui_manager_1.a_image*0.125)), (0,0,255), -1 , 20)
+            cv2.putText(frame_1, "Non ti vedo!", (int(ui_manager_1.l_image*0.015), int(ui_manager_1.a_image*0.065)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
             merged_frame = cv2.hconcat([frame, frame_1])
             if tempo_sec > 0:
                 if istante_ultimo_wallsit != None:
@@ -193,14 +215,9 @@ def ex_wallsit():
                     cv2.putText(merged_frame, str(round(tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
                     if tempo_wallsit != None and tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1) > tempo_wallsit:
                         break
-                #timer viola
-                """cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
-                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-                """
             if not (ui_manager_front.display_frame(merged_frame)) or (tempo_wallsit != None and tempo_sec > tempo_wallsit):
                 break
-            continue 
+            continue
 
         #questo non da errori neanche se non ci sono landmark
         frame, errore = posture_detector.check_landmarks(frame, ui_manager_front.l_image, ui_manager_front.a_image, landmarks, 0)
@@ -213,39 +230,11 @@ def ex_wallsit():
                     cv2.putText(merged_frame, str(round(tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
                     if tempo_wallsit != None and tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1) > tempo_wallsit:
                         break
-                #timer viola
-                """cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
-                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-                """
             if not (ui_manager_front.display_frame(merged_frame)) or (tempo_wallsit != None and tempo_sec > tempo_wallsit):
                 break  
             continue
         #qui non può dare errore perchè i landmark ce li hai per forza 
         frame = posture_detector.draw_landmarks(frame, results.pose_landmarks)
-        
-
-        #estraggo landmark e li mostro (camera laterale)
-        try:
-            landmarks_1, results_1 = posture_detector1.detect_posture(frame_1)
-        except :
-            #se non vede nessuno lancia l'eccezione
-            merged_frame = cv2.hconcat([frame, frame_1])
-            if tempo_sec > 0:
-                if istante_ultimo_wallsit != None:
-                    cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
-                    #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                    cv2.putText(merged_frame, str(round(tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-                    if tempo_wallsit != None and tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1) > tempo_wallsit:
-                        break
-                """#timer viola
-                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
-                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-                """
-            if not (ui_manager_front.display_frame(merged_frame)) or (tempo_wallsit != None and tempo_sec > tempo_wallsit):
-                break
-            continue 
 
         #controllo visibilità landmark camera laterale 
         frame_1, errore_1 = posture_detector1.check_landmarks(frame_1, ui_manager_1.l_image, ui_manager_1.a_image, landmarks_1, 1)
@@ -258,11 +247,6 @@ def ex_wallsit():
                     cv2.putText(merged_frame, str(round(tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1),1)), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
                     if tempo_wallsit != None and tempo_sec + round((datetime.now()-istante_ultimo_wallsit).total_seconds(),1) > tempo_wallsit:
                         break
-                """#timer viola
-                cv2.rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 0, 255), -1)
-                #draw_rectangle(merged_frame, (int(ui_manager_front.larghezza_nuova*0.45),int(ui_manager_front.altezza_nuova*0.005)), (int(ui_manager_front.larghezza_nuova*0.55), int(ui_manager_front.altezza_nuova*0.06)), (255, 255, 255), -1 , 20)
-                cv2.putText(merged_frame, str(tempo_sec), (int(ui_manager_front.larghezza_nuova*0.475), int(ui_manager_front.altezza_nuova*0.05)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, 16)
-                """
             if not (ui_manager_front.display_frame(merged_frame)) or (tempo_wallsit != None and tempo_sec > tempo_wallsit):
                 break 
             continue
