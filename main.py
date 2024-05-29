@@ -17,7 +17,7 @@ class APPManager:
     def __init__(self,name):
         self.name = name
 
-    def ex_squat():
+    def ex_squat(self):
 
         posture_detector = utility.PostureDetector()
         posture_detector1 = utility.PostureDetector() 
@@ -40,10 +40,10 @@ class APPManager:
 
         scelta = info_squat.tipo_esercizio
         tempo_sec = 0  
-        vcom_stop = utility.Speech_interaction(["stop", "ferma", "termina", "fine", "finisci", "esci"])
+        vcom_stop = utility.Speech_interaction(["stop", "ferma", "termina", "fine", "finisci", "esci", "chiudi"])
         stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
         
-        utility.pronuncia("In ogni momento puoi dire stop, ferma, termina, fine, finisci, esci oppure premere q per terminare la sessione")
+        utility.pronuncia("In ogni momento puoi dire stop, ferma, termina, fine, finisci, esci, chiudi oppure premere q per terminare la sessione")
 
         while ui_manager_front.cap.isOpened() and not vcom_stop.vocal_command:
             if scelta == "serie" and squat_counter.count_serie == squat_counter.num_serie:
@@ -157,7 +157,7 @@ class APPManager:
         ui_manager_1.release_capture()
         cv2.destroyAllWindows() 
 
-    def ex_wallsit():
+    def ex_wallsit(self):
 
         posture_detector = utility.PostureDetector()
         posture_detector1 = utility.PostureDetector() 
@@ -173,11 +173,11 @@ class APPManager:
         tempo_wallsit = info_wallsit.num_sec
         wallsit = excercises.Static()
         
-        vcom_stop = utility.Speech_interaction(["stop", "ferma", "termina", "fine", "finisci", "esci"])
+        vcom_stop = utility.Speech_interaction(["stop", "ferma", "termina", "fine", "finisci", "esci", "chiudi"])
         stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
         istante_ultimo_wallsit = None 
         
-        utility.pronuncia("In ogni momento puoi dire stop, ferma, termina, fine, finisci, esci oppure premere q per terminare la sessione")
+        utility.pronuncia("In ogni momento puoi dire stop, ferma, termina, fine, finisci, esci, chiudi oppure premere q per terminare la sessione")
 
         while ui_manager_front.cap.isOpened() and not vcom_stop.vocal_command :
 
@@ -317,8 +317,8 @@ if __name__ == "__main__":
 
     #GOOGLE API 
     #serve per capire quando terminare il programma
-    #vcom_stop = utility.Speech_interaction(["stop", "ferma", "termina", "fine", "finisci", "esci"])
-    #stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
+    vcom_stop = utility.Speech_interaction(["stop", "ferma", "termina", "fine", "finisci", "esci", "chiudi"])
+    stop_listening = vcom_stop.recognizer.listen_in_background(vcom_stop.microphone, vcom_stop.check_voice_command)
 
     #Setting up theme of your app, or light
     customtkinter.set_appearance_mode("dark")
@@ -326,17 +326,16 @@ if __name__ == "__main__":
     #cambia colore bottoni
     customtkinter.set_default_color_theme("green")
 
-    manager = APPManager("uno")    
+    #manager = APPManager("uno")    
 
     # Creazione della finestra principale
     root = customtkinter.CTk()
     root.title("Menu")
     root.geometry(f"{400}x{400}")
-
+    manager = APPManager("uno")   
     # Etichetta per visualizzare il risultato dell'azione selezionata
     #label = Label(root, text="")
-    #label.pack()
-
+    #label.pack()    
     logo_label = customtkinter.CTkLabel(master=root, text="Esercizi", font=customtkinter.CTkFont(size=20, weight="bold"))
     logo_label.place(relx=0.5, rely=0.1, anchor=CENTER)
     #logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
@@ -362,6 +361,6 @@ if __name__ == "__main__":
     root.mainloop()
 
     #GOOGLE API         
-    #stop_listening(wait_for_stop = False) 
+    stop_listening(wait_for_stop = False) 
 
     cv2.destroyAllWindows()
