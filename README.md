@@ -7,7 +7,7 @@ In this project, we focused on multimodality, and so there are different technol
 
 In particular, we use 2 different cameras to capture video from different angles to better estimate the position of the user in each frame in real-time, to achieve a high precision in angles calculus. To estimate the *landmarks* and obtain information about the angles we use two different *MediaPipe* pose estimation models, one for each camera, the frontal one is responsible for checking that there is the right distance between legs and that the backbone is aligned. the side camera ensures that the body is exposed in the front or on the back and calculates the angle of the hip and knee.
 
-![Alt text](./images/Corey-SquatAngles.jpg)
+<img src="./images/Corey-SquatAngles.jpg" alt="Alt text" width="600"/>
 
 Image from:
 www.breakfreephysiotherapy.ca/blog/low-back-pain-from-squats
@@ -25,8 +25,8 @@ Then the exercise will start and you should see landmarks appear on your body.
 which starts at the exact moment the user starts the first squat, 
 and the feedback the app gives to the user during the exercise: good repetition, too fast, too slow, should go a bit more down or your backbone is not aligned.
 
-![Alt text](./images/squat_inizio_ok.png)
+<img src="./images/squat_inizio_ok.png" alt="Alt text" width="600"/>
 
-**Wallsit**:
+**Wallsit**: wallsit is a static exercise in which there are no repetitions but instead the athlete has to keep a precise position for a certain amount of time. The timer starts when the user is in the right position and in the end it will show how many seconds the user had a good position over the total second of workout selected by the user.
 
 **Workout**:
