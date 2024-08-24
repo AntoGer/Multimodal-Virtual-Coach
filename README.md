@@ -29,4 +29,12 @@ and the feedback the app gives to the user during the exercise: good repetition,
 
 **Wallsit**: wallsit is a static exercise in which there are no repetitions but instead the athlete has to keep a precise position for a certain amount of time. The timer starts when the user is in the right position and in the end it will show how many seconds the user had a good position over the total second of workout selected by the user.
 
-**Workout**:
+<img src="./images/wallsit_ok.png" alt="Alt text" width="600"/>
+
+In this screenshot, the user is keeping the right position and in the top left corner there's a green feedback that shows that everything is ok.
+
+<img src="./images/wallsit_problemi.png" alt="Alt text" width="600"/>
+
+In this other example, the user assumes a wrong position, in particular, he is going too low and the angle is too small, the system alerts the user showing red feedback and these seconds of execution will be labelled as wrong.
+
+**Workout**: The workout is just a combination of the two above exercises, in which the user can choose to do both multiple times in a row without selecting it every time.
